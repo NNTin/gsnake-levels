@@ -5,7 +5,7 @@ author = "gsnake"
 solved = true
 difficulty = "hard"
 tags = []
-description = "The Tower"
+description = "Spike Weave"
 
 [[level]]
 id = "level_002"
@@ -14,4 +14,4 @@ author = "gsnake"
 solved = true
 difficulty = "hard"
 tags = []
-description = "Floating Islands"
+description = "Gauntlet"

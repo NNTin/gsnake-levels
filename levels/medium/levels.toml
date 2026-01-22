@@ -5,7 +5,7 @@ author = "gsnake"
 solved = true
 difficulty = "medium"
 tags = []
-description = "The Wall"
+description = "Stone Run"
 
 [[level]]
 id = "level_002"
@@ -14,4 +14,4 @@ author = "gsnake"
 solved = true
 difficulty = "medium"
 tags = []
-description = "Zig Zag"
+description = "Mixed Signals"

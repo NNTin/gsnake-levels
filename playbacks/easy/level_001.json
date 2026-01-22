@@ -38,9 +38,5 @@
   {
     "key": "Right",
     "delay_ms": 200
-  },
-  {
-    "key": "Right",
-    "delay_ms": 200
   }
 ]
