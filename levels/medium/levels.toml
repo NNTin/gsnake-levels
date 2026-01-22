@@ -2,7 +2,7 @@
 id = "level_001"
 file = "level_001.json"
 author = "gsnake"
-solved = false
+solved = true
 difficulty = "medium"
 tags = []
 description = "The Wall"
@@ -11,7 +11,7 @@ description = "The Wall"
 id = "level_002"
 file = "level_002.json"
 author = "gsnake"
-solved = false
+solved = true
 difficulty = "medium"
 tags = []
 description = "Zig Zag"

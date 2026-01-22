@@ -37,6 +37,8 @@ cargo run -- replay levels/easy/level_001.json playbacks/easy/level_001.json
 # Requires asciinema and svg-term (svg-term-cli) on PATH
 cargo run -- render levels/easy/level_001.json playbacks/easy/level_001.json
 cargo run -- generate-levels-json --filter easy,medium
+# Solve a level and write a playback JSON
+cargo run --bin solve_level -- levels/easy/level_001.json playbacks/easy/level_001.json 200
 ```
 
 ```text

@@ -4,15 +4,59 @@
     "delay_ms": 200
   },
   {
-    "key": "Down",
-    "delay_ms": 200
-  },
-  {
-    "key": "Left",
+    "key": "Right",
     "delay_ms": 200
   },
   {
     "key": "Up",
+    "delay_ms": 200
+  },
+  {
+    "key": "Right",
+    "delay_ms": 200
+  },
+  {
+    "key": "Down",
+    "delay_ms": 200
+  },
+  {
+    "key": "Right",
+    "delay_ms": 200
+  },
+  {
+    "key": "Right",
+    "delay_ms": 200
+  },
+  {
+    "key": "Right",
+    "delay_ms": 200
+  },
+  {
+    "key": "Right",
+    "delay_ms": 200
+  },
+  {
+    "key": "Right",
+    "delay_ms": 200
+  },
+  {
+    "key": "Right",
+    "delay_ms": 200
+  },
+  {
+    "key": "Up",
+    "delay_ms": 200
+  },
+  {
+    "key": "Right",
+    "delay_ms": 200
+  },
+  {
+    "key": "Down",
+    "delay_ms": 200
+  },
+  {
+    "key": "Right",
     "delay_ms": 200
   }
 ]
