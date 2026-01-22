@@ -3,9 +3,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 pub fn run_replay(level: &Path, playback: &Path) -> Result<()> {
-    let workspace_root = workspace_root()?;
     let status = Command::new("cargo")
         .arg("run")
+        .arg("--manifest-path")
+        .arg(gsnake_core_manifest()?)
         .arg("-p")
         .arg("gsnake-cli")
         .arg("--")
@@ -13,7 +14,6 @@ pub fn run_replay(level: &Path, playback: &Path) -> Result<()> {
         .arg(level)
         .arg("--input-file")
         .arg(playback)
-        .current_dir(workspace_root)
         .status()
         .with_context(|| "Failed to run gsnake-cli replay")?;
 
@@ -34,10 +34,15 @@ pub fn run_render(level: &Path, playback: &Path) -> Result<()> {
         std::fs::create_dir_all(parent)
             .with_context(|| format!("Failed to create {}", parent.display()))?;
     }
+    if cast_path.exists() {
+        std::fs::remove_file(&cast_path)
+            .with_context(|| format!("Failed to remove {}", cast_path.display()))?;
+    }
 
-    let workspace_root = workspace_root()?;
     let status = Command::new("cargo")
         .arg("run")
+        .arg("--manifest-path")
+        .arg(gsnake_core_manifest()?)
         .arg("-p")
         .arg("gsnake-cli")
         .arg("--")
@@ -48,7 +53,6 @@ pub fn run_render(level: &Path, playback: &Path) -> Result<()> {
         .arg("--record")
         .arg("--record-output")
         .arg(&cast_path)
-        .current_dir(workspace_root)
         .status()
         .with_context(|| "Failed to run gsnake-cli with recording")?;
 
@@ -117,10 +121,10 @@ fn infer_svg_path(playback: &Path) -> Result<PathBuf> {
     Ok(output.with_extension("svg"))
 }
 
-fn workspace_root() -> Result<PathBuf> {
+fn gsnake_core_manifest() -> Result<PathBuf> {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let root = manifest_dir
         .parent()
-        .ok_or_else(|| anyhow::anyhow!("Failed to resolve workspace root"))?;
-    Ok(root.to_path_buf())
+        .ok_or_else(|| anyhow::anyhow!("Failed to resolve gsnake-levels parent dir"))?;
+    Ok(root.join("gsnake-core").join("Cargo.toml"))
 }

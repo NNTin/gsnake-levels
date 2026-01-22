@@ -7,6 +7,12 @@ cargo build
 Usage:
 
 ```text
+Run from this directory:
+  cargo run -- <COMMAND>
+
+Or use the built binary:
+  ./target/debug/gsnake-levels <COMMAND>
+
 Usage: gsnake-levels <COMMAND>
 
 Commands:
@@ -20,6 +26,17 @@ Commands:
 Options:
   -h, --help     Print help
   -V, --version  Print version
+```
+
+Examples:
+
+```bash
+cargo run -- verify --playback playbacks/easy/level_001.json levels/easy/level_001.json
+cargo run -- verify-all
+cargo run -- replay levels/easy/level_001.json playbacks/easy/level_001.json
+# Requires asciinema and svg-term (svg-term-cli) on PATH
+cargo run -- render levels/easy/level_001.json playbacks/easy/level_001.json
+cargo run -- generate-levels-json --filter easy,medium
 ```
 
 ```text

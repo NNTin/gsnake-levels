@@ -1,0 +1,17 @@
+[[level]]
+id = "level_001"
+file = "level_001.json"
+author = "gsnake"
+solved = false
+difficulty = "easy"
+tags = []
+description = "First Steps"
+
+[[level]]
+id = "level_002"
+file = "level_002.json"
+author = "gsnake"
+solved = false
+difficulty = "easy"
+tags = []
+description = "The Drop"
