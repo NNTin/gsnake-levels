@@ -15,3 +15,21 @@ solved = true
 difficulty = "medium"
 tags = []
 description = "Mixed Signals"
+
+[[level]]
+id = "level_003"
+file = "level_003.json"
+author = "gsnake"
+solved = true
+difficulty = "medium"
+tags = []
+description = "Stone Switch"
+
+[[level]]
+id = "level_004"
+file = "level_004.json"
+author = "gsnake"
+solved = true
+difficulty = "medium"
+tags = []
+description = "Stone Zigzag"

@@ -15,3 +15,21 @@ solved = true
 difficulty = "hard"
 tags = []
 description = "Gauntlet"
+
+[[level]]
+id = "level_003"
+file = "level_003.json"
+author = "gsnake"
+solved = true
+difficulty = "hard"
+tags = []
+description = "Spiked Lift"
+
+[[level]]
+id = "level_004"
+file = "level_004.json"
+author = "gsnake"
+solved = true
+difficulty = "hard"
+tags = []
+description = "Food Perch"

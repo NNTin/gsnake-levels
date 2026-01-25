@@ -15,3 +15,12 @@ solved = true
 difficulty = "easy"
 tags = []
 description = "Floating Drop"
+
+[[level]]
+id = "level_003"
+file = "level_003.json"
+author = "gsnake"
+solved = true
+difficulty = "easy"
+tags = []
+description = "Food Bridge"
