@@ -119,7 +119,6 @@ checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 [[package]]
 name = "gsnake-core"
 version = "0.1.0"
-source = "git+https://github.com/nntin/gsnake?branch=main#1d026f0cf0d64cea5db3d7990f19d01295c4aba9"
 dependencies = [
  "serde",
  "serde_json",

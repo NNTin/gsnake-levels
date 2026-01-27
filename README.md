@@ -13,7 +13,32 @@ branch = "main"
 package = "gsnake-core"
 ```
 
-When working in the root repository, the local version of `gsnake-core` will be used automatically via `.cargo/config.toml` patch (configured in US-007).
+### Local Override Detection (Root Repository Mode)
+
+When building in the root repository, `gsnake-levels` automatically detects the context and uses the local version of `gsnake-core` instead of fetching from git. This is implemented via a `build.rs` script that:
+
+1. **Detects root repo context** by checking:
+   - `../.git` exists (indicating root repository)
+   - `../gsnake-core/Cargo.toml` exists (sibling directory present)
+
+2. **Creates .cargo/config.toml patch** with:
+   ```toml
+   [patch."https://github.com/nntin/gsnake"]
+   gsnake-core = { path = "../gsnake-core/engine/core" }
+   ```
+
+3. **Automatically switches modes**:
+   - **Root repo mode**: Uses local path for development (faster builds, no network)
+   - **Standalone mode**: Uses git dependency (works anywhere)
+
+You can verify which mode is active by checking the build output:
+```bash
+cargo clean && cargo build
+# Root repo: "warning: Root repository detected - using local gsnake-core"
+# Standalone: "warning: Standalone mode - using git dependency"
+```
+
+The override happens transparently - no manual configuration needed!
 
 ## Build
 
