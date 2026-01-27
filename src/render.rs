@@ -126,5 +126,18 @@ fn gsnake_core_manifest() -> Result<PathBuf> {
     let root = manifest_dir
         .parent()
         .ok_or_else(|| anyhow::anyhow!("Failed to resolve gsnake-levels parent dir"))?;
-    Ok(root.join("gsnake-core").join("Cargo.toml"))
+    let manifest_path = root.join("gsnake-core").join("Cargo.toml");
+
+    // Check if gsnake-core exists as a sibling (root repo context)
+    if manifest_path.exists() {
+        Ok(manifest_path)
+    } else {
+        bail!(
+            "gsnake-core not found at {}. \
+            The replay and render commands require running in the root repository context \
+            where gsnake-core is available as a sibling directory. \
+            Alternatively, install gsnake-cli separately and use it directly.",
+            manifest_path.display()
+        )
+    }
 }

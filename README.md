@@ -1,4 +1,21 @@
-Build:
+# gsnake-levels
+
+Level management and validation tools for gSnake.
+
+## Dependencies
+
+This crate uses `gsnake-core` as a git dependency, allowing it to build standalone:
+
+```toml
+[dependencies.gsnake-core]
+git = "https://github.com/nntin/gsnake"
+branch = "main"
+package = "gsnake-core"
+```
+
+When working in the root repository, the local version of `gsnake-core` will be used automatically via `.cargo/config.toml` patch (configured in US-007).
+
+## Build
 
 ```bash
 cargo build
@@ -28,7 +45,7 @@ Options:
   -V, --version  Print version
 ```
 
-Examples:
+## Examples
 
 ```bash
 cargo run -- verify --playback playbacks/easy/level_001.json levels/easy/level_001.json
@@ -40,6 +57,8 @@ cargo run -- generate-levels-json --filter easy,medium
 # Solve a level and write a playback JSON
 cargo run --bin solve_level -- levels/easy/level_001.json playbacks/easy/level_001.json 200
 ```
+
+**Note:** The `replay` and `render` commands require running in the root repository context where `gsnake-core` is available as a sibling directory, as they use `cargo run` to execute the `gsnake-cli` binary. For standalone usage, install `gsnake-cli` separately and use it directly.
 
 ```text
 Verify that a level is solvable using its playback file

@@ -1,0 +1,6 @@
+# Cargo configuration for gsnake-levels
+
+[net]
+# Use git CLI for fetching to handle SSH authentication for git submodules
+# This is required because the gsnake repository contains git submodules with SSH URLs
+git-fetch-with-cli = true
