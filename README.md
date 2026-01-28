@@ -40,6 +40,42 @@ cargo clean && cargo build
 
 The override happens transparently - no manual configuration needed!
 
+## CI/CD
+
+This submodule has its own GitHub Actions workflow at `.github/workflows/ci.yml` to validate standalone builds.
+
+### Testing CI Locally with nektos/act
+
+You can test the CI workflow locally using [nektos/act](https://github.com/nektos/act):
+
+```bash
+# Install act (if not already installed)
+# Ubuntu/Debian: sudo apt install act
+# macOS: brew install act
+
+# Test the build job
+cd gsnake-levels
+act -j build
+
+# Test the test job
+act -j test
+
+# List all available jobs
+act -l
+```
+
+**Note:** act requires Docker and uses it to simulate GitHub Actions runners. On first run, it will prompt you to select a Docker image size (recommend the medium image: `ghcr.io/catthehacker/ubuntu:act-latest`).
+
+**Known Limitations:**
+- Cache actions may not work exactly as on GitHub Actions
+- Some network operations may differ from GitHub's environment
+- `workflow_dispatch` trigger cannot be tested with act
+
+For simple workflow validation without running jobs, use:
+```bash
+act -n  # dry run mode
+```
+
 ## Build
 
 ```bash
