@@ -20,6 +20,20 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Configure cargo for CI
+        run: |
+          mkdir -p .cargo
+          cat >> .cargo/config.toml << 'EOF'
+          [net]
+          git-fetch-with-cli = true
+          EOF
+        working-directory: gsnake-levels
+
+      - name: Configure git to use HTTPS for all GitHub repos
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+
       - name: Cache cargo registry
         uses: actions/cache@v4
         with:
@@ -41,6 +55,12 @@ jobs:
       - name: Build
         run: cargo build --verbose
         working-directory: gsnake-levels
+        env:
+          GIT_CONFIG_COUNT: 1
+          GIT_CONFIG_KEY_0: submodule.recurse
+          GIT_CONFIG_VALUE_0: false
+          GIT_TERMINAL_PROMPT: 0
+          CARGO_NET_GIT_FETCH_WITH_CLI: true
 
   test:
     name: Test
@@ -53,6 +73,20 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Configure cargo for CI
+        run: |
+          mkdir -p .cargo
+          cat >> .cargo/config.toml << 'EOF'
+          [net]
+          git-fetch-with-cli = true
+          EOF
+        working-directory: gsnake-levels
+
+      - name: Configure git to use HTTPS for all GitHub repos
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -75,3 +109,9 @@ jobs:
       - name: Test
         run: cargo test --verbose
         working-directory: gsnake-levels
+        env:
+          GIT_CONFIG_COUNT: 1
+          GIT_CONFIG_KEY_0: submodule.recurse
+          GIT_CONFIG_VALUE_0: false
+          GIT_TERMINAL_PROMPT: 0
+          CARGO_NET_GIT_FETCH_WITH_CLI: true
