@@ -17,3 +17,6 @@ toml = "0.8"
 git = "https://github.com/nntin/gsnake"
 branch = "main"
 package = "gsnake-core"
+
+[dev-dependencies]
+tempfile = "3.13"
