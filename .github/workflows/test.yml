@@ -1,0 +1,32 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gsnake-levels
+        uses: actions/checkout@v4
+        with:
+          path: gsnake-levels
+
+      - name: Checkout NNTin/gSnake root repo
+        uses: actions/checkout@v4
+        with:
+          repository: NNTin/gSnake
+          path: gsnake-root
+
+      - name: Create workspace-root symlink for gsnake-core
+        run: |
+          ln -s gsnake-root/gsnake-core gsnake-core
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run tests
+        run: cargo test --verbose
+        working-directory: gsnake-levels
