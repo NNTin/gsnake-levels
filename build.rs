@@ -45,6 +45,10 @@ gsnake-core = { path = "../gsnake-core/engine/core" }
                 format!("{}\n{}", existing_config, patch_section)
             };
 
+            // Create .cargo directory if it doesn't exist
+            fs::create_dir_all(&cargo_dir)
+                .expect("Failed to create .cargo directory");
+
             fs::write(&config_path, new_config)
                 .expect("Failed to write .cargo/config.toml");
 

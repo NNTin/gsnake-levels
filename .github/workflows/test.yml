@@ -14,6 +14,19 @@ jobs:
         with:
           path: gsnake-levels
 
+      - name: Resolve gsnake-levels directory
+        run: |
+          for candidate in "." "gsnake-levels" "gsnake-levels/gsnake-levels"; do
+            if [ -f "${candidate}/Cargo.toml" ]; then
+              echo "LEVELS_DIR=${candidate}" >> "$GITHUB_ENV"
+              exit 0
+            fi
+          done
+          echo "Unable to locate gsnake-levels Cargo.toml" >&2
+          ls -la
+          find . -maxdepth 3 -type f -name Cargo.toml
+          exit 1
+
       - name: Checkout NNTin/gSnake root repo
         uses: actions/checkout@v4
         with:
@@ -29,4 +42,4 @@ jobs:
 
       - name: Run tests
         run: cargo test --verbose
-        working-directory: gsnake-levels
+        working-directory: ${{ env.LEVELS_DIR }}
