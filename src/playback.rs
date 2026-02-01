@@ -13,8 +13,8 @@ struct PlaybackFileStep {
 pub fn load_playback_directions(path: &Path) -> Result<Vec<Direction>> {
     let contents = fs::read_to_string(path)
         .with_context(|| format!("Failed to read playback file: {}", path.display()))?;
-    let raw_steps: Vec<PlaybackFileStep> = serde_json::from_str(&contents)
-        .with_context(|| "Failed to parse playback JSON")?;
+    let raw_steps: Vec<PlaybackFileStep> =
+        serde_json::from_str(&contents).with_context(|| "Failed to parse playback JSON")?;
 
     if raw_steps.is_empty() {
         bail!("Playback input file is empty");
@@ -43,9 +43,7 @@ fn parse_key(key: &str) -> Result<Direction> {
         "down" | "south" => Ok(Direction::South),
         "left" | "west" => Ok(Direction::West),
         "up" | "north" => Ok(Direction::North),
-        _ => bail!(
-            "Invalid key '{key}'. Use Right/Left/Up/Down (or R/L/U/D)."
-        ),
+        _ => bail!("Invalid key '{key}'. Use Right/Left/Up/Down (or R/L/U/D)."),
     }
 }
 
@@ -55,9 +53,7 @@ fn parse_string_char(ch: char) -> Result<Direction> {
         'D' => Ok(Direction::South),
         'L' => Ok(Direction::West),
         'U' => Ok(Direction::North),
-        _ => bail!(
-            "Invalid input character '{ch}'. Use R, D, L, U for moves."
-        ),
+        _ => bail!("Invalid input character '{ch}'. Use R, D, L, U for moves."),
     }
 }
 
@@ -101,7 +97,10 @@ mod tests {
 
             let directions = result.unwrap();
             assert!(!directions.is_empty());
-            assert!(directions.iter().all(|d| matches!(d, Direction::East | Direction::South | Direction::West | Direction::North)));
+            assert!(directions.iter().all(|d| matches!(
+                d,
+                Direction::East | Direction::South | Direction::West | Direction::North
+            )));
         }
     }
 

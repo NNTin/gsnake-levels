@@ -1,0 +1,25 @@
+#!/bin/bash
+set -e
+
+# Pre-commit hook for gsnake-levels
+# Runs format, lint, typecheck, and build checks without tests for speed
+
+echo "Running pre-commit checks for gsnake-levels..."
+
+# Check code formatting
+echo "Checking formatting..."
+cargo fmt --all -- --check
+
+# Run clippy linter
+echo "Running clippy..."
+cargo clippy --all-targets -- -D warnings
+
+# Run typecheck
+echo "Running typecheck..."
+cargo check
+
+# Run build
+echo "Running build..."
+cargo build
+
+echo "✓ All pre-commit checks passed!"

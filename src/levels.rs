@@ -69,8 +69,8 @@ pub fn levels_toml_path_for(level_path: &Path) -> PathBuf {
 }
 
 pub fn read_levels_toml(path: &Path) -> Result<LevelsToml> {
-    let contents = fs::read_to_string(path)
-        .with_context(|| format!("Failed to read {}", path.display()))?;
+    let contents =
+        fs::read_to_string(path).with_context(|| format!("Failed to read {}", path.display()))?;
     let levels_toml: LevelsToml =
         toml::from_str(&contents).with_context(|| format!("Failed to parse {}", path.display()))?;
     Ok(levels_toml)

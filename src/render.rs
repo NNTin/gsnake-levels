@@ -94,7 +94,8 @@ fn ensure_svg_term() -> Result<()> {
 
 fn svg_term_command() -> Result<String> {
     for candidate in ["svg-term", "svg-term-cli"] {
-        if matches!(Command::new(candidate).arg("--version").status(), Ok(status) if status.success()) {
+        if matches!(Command::new(candidate).arg("--version").status(), Ok(status) if status.success())
+        {
             return Ok(candidate.to_string());
         }
     }

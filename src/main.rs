@@ -2,12 +2,12 @@ use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
+mod generate;
 mod levels;
 mod playback;
-mod generate;
 mod render;
-mod verify_all;
 mod verify;
+mod verify_all;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -73,16 +73,12 @@ fn main() -> Result<()> {
             levels::update_solved_status(&level, solved)
                 .with_context(|| "Failed to update levels.toml metadata")?;
             result
-        }
-        Command::Replay { level, playback } => {
-            render::run_replay(&level, &playback)
-        }
+        },
+        Command::Replay { level, playback } => render::run_replay(&level, &playback),
         Command::VerifyAll => verify_all::run_verify_all(),
         Command::GenerateLevelsJson { filter, dry_run } => {
             generate::run_generate_levels_json(filter.as_deref(), dry_run)
-        }
-        Command::Render { level, playback } => {
-            render::run_render(&level, &playback)
-        }
+        },
+        Command::Render { level, playback } => render::run_render(&level, &playback),
     }
 }

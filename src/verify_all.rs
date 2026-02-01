@@ -1,6 +1,6 @@
 use crate::{levels, verify};
 use anyhow::{bail, Context, Result};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub fn run_verify_all() -> Result<()> {
     let levels_root = levels::find_levels_root()?;
@@ -33,15 +33,12 @@ pub fn run_verify_all() -> Result<()> {
             match verify::verify_level(&level_path, &playback_path) {
                 Ok(()) => {
                     entry.solved = Some(true);
-                }
+                },
                 Err(error) => {
                     entry.solved = Some(false);
                     any_failed = true;
-                    eprintln!(
-                        "Verification failed for {}: {error}",
-                        level_path.display()
-                    );
-                }
+                    eprintln!("Verification failed for {}: {error}", level_path.display());
+                },
             }
             updated = true;
         }
@@ -59,7 +56,7 @@ pub fn run_verify_all() -> Result<()> {
     }
 }
 
-fn infer_playback_path(levels_root: &PathBuf, level_path: &PathBuf) -> Result<PathBuf> {
+fn infer_playback_path(levels_root: &PathBuf, level_path: &Path) -> Result<PathBuf> {
     let relative = level_path.strip_prefix(levels_root).with_context(|| {
         format!(
             "Level path {} is not under levels root {}",

@@ -1,7 +1,10 @@
 use crate::playback::load_playback_directions;
 use anyhow::{bail, Context, Result};
 use gsnake_core::{engine::GameEngine, GameStatus, LevelDefinition};
-use std::{fs, path::{Component, Path, PathBuf}};
+use std::{
+    fs,
+    path::{Component, Path, PathBuf},
+};
 
 pub fn resolve_playback_path(level_path: &Path, override_path: Option<PathBuf>) -> Result<PathBuf> {
     if let Some(path) = override_path {
@@ -15,7 +18,7 @@ pub fn resolve_playback_path(level_path: &Path, override_path: Option<PathBuf>) 
             Component::Normal(name) if name == "levels" && !replaced_any => {
                 replaced.push("playbacks");
                 replaced_any = true;
-            }
+            },
             _ => replaced.push(component.as_os_str()),
         }
     }
@@ -58,8 +61,8 @@ pub fn verify_level(level_path: &Path, playback_path: &Path) -> Result<()> {
 fn load_level(level_path: &Path) -> Result<LevelDefinition> {
     let contents = fs::read_to_string(level_path)
         .with_context(|| format!("Failed to read level file: {}", level_path.display()))?;
-    let level: LevelDefinition = serde_json::from_str(&contents)
-        .with_context(|| "Failed to parse level JSON")?;
+    let level: LevelDefinition =
+        serde_json::from_str(&contents).with_context(|| "Failed to parse level JSON")?;
     Ok(level)
 }
 
@@ -74,7 +77,10 @@ mod tests {
 
         assert!(result.is_ok());
         let playback_path = result.unwrap();
-        assert_eq!(playback_path, PathBuf::from("playbacks/easy/level_001.json"));
+        assert_eq!(
+            playback_path,
+            PathBuf::from("playbacks/easy/level_001.json")
+        );
     }
 
     #[test]
@@ -84,7 +90,10 @@ mod tests {
 
         assert!(result.is_ok());
         let playback_path = result.unwrap();
-        assert_eq!(playback_path, PathBuf::from("playbacks/medium/level_005.json"));
+        assert_eq!(
+            playback_path,
+            PathBuf::from("playbacks/medium/level_005.json")
+        );
     }
 
     #[test]
@@ -94,18 +103,21 @@ mod tests {
 
         assert!(result.is_ok());
         let playback_path = result.unwrap();
-        assert_eq!(playback_path, PathBuf::from("playbacks/hard/level_010.json"));
+        assert_eq!(
+            playback_path,
+            PathBuf::from("playbacks/hard/level_010.json")
+        );
     }
 
     #[test]
     fn test_resolve_playback_path_with_override() {
         let level_path = Path::new("levels/easy/level_001.json");
-        let override_path = Some(PathBuf::from("custom/path/to/playback.json"));
-        let result = resolve_playback_path(level_path, override_path.clone());
+        let override_path = PathBuf::from("custom/path/to/playback.json");
+        let result = resolve_playback_path(level_path, Some(override_path.clone()));
 
         assert!(result.is_ok());
         let playback_path = result.unwrap();
-        assert_eq!(playback_path, override_path.unwrap());
+        assert_eq!(playback_path, override_path);
     }
 
     #[test]
@@ -135,7 +147,10 @@ mod tests {
 
         assert!(result.is_ok());
         let playback_path = result.unwrap();
-        assert_eq!(playback_path, PathBuf::from("/absolute/path/playbacks/easy/level_001.json"));
+        assert_eq!(
+            playback_path,
+            PathBuf::from("/absolute/path/playbacks/easy/level_001.json")
+        );
     }
 
     #[test]
@@ -145,6 +160,9 @@ mod tests {
 
         assert!(result.is_ok());
         let playback_path = result.unwrap();
-        assert_eq!(playback_path, PathBuf::from("some/nested/playbacks/easy/level_001.json"));
+        assert_eq!(
+            playback_path,
+            PathBuf::from("some/nested/playbacks/easy/level_001.json")
+        );
     }
 }

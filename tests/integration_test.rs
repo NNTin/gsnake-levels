@@ -44,9 +44,18 @@ fn test_verify_level_does_not_mutate_files() {
 #[test]
 fn test_verify_level_with_multiple_levels() {
     let test_cases = vec![
-        ("levels/easy/level_001.json", "playbacks/easy/level_001.json"),
-        ("levels/easy/level_002.json", "playbacks/easy/level_002.json"),
-        ("levels/easy/level_003.json", "playbacks/easy/level_003.json"),
+        (
+            "levels/easy/level_001.json",
+            "playbacks/easy/level_001.json",
+        ),
+        (
+            "levels/easy/level_002.json",
+            "playbacks/easy/level_002.json",
+        ),
+        (
+            "levels/easy/level_003.json",
+            "playbacks/easy/level_003.json",
+        ),
     ];
 
     for (level_path, playback_path) in test_cases {

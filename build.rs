@@ -46,11 +46,9 @@ gsnake-core = { path = "../gsnake-core/engine/core" }
             };
 
             // Create .cargo directory if it doesn't exist
-            fs::create_dir_all(&cargo_dir)
-                .expect("Failed to create .cargo directory");
+            fs::create_dir_all(cargo_dir).expect("Failed to create .cargo directory");
 
-            fs::write(&config_path, new_config)
-                .expect("Failed to write .cargo/config.toml");
+            fs::write(&config_path, new_config).expect("Failed to write .cargo/config.toml");
 
             println!("cargo:warning=Created local path override in .cargo/config.toml");
         } else {
@@ -78,7 +76,10 @@ gsnake-core = { path = "../gsnake-core/engine/core" }
                 let mut in_patch_section = false;
 
                 for line in lines {
-                    if line.trim().starts_with("[patch.\"https://github.com/nntin/gsnake\"]") {
+                    if line
+                        .trim()
+                        .starts_with("[patch.\"https://github.com/nntin/gsnake\"]")
+                    {
                         in_patch_section = true;
                         continue;
                     }

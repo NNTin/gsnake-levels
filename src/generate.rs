@@ -74,7 +74,7 @@ fn parse_filter(filter: Option<&str>) -> Result<Vec<&'static str>> {
 fn load_level(level_path: &PathBuf) -> Result<LevelDefinition> {
     let contents = std::fs::read_to_string(level_path)
         .with_context(|| format!("Failed to read level file: {}", level_path.display()))?;
-    let level: LevelDefinition = serde_json::from_str(&contents)
-        .with_context(|| "Failed to parse level JSON")?;
+    let level: LevelDefinition =
+        serde_json::from_str(&contents).with_context(|| "Failed to parse level JSON")?;
     Ok(level)
 }

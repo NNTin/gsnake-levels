@@ -37,8 +37,14 @@ struct PlaybackStep {
 
 fn main() -> Result<()> {
     let mut args = std::env::args().skip(1);
-    let level_path = args.next().map(PathBuf::from).context("Missing level path")?;
-    let output_path = args.next().map(PathBuf::from).context("Missing output path")?;
+    let level_path = args
+        .next()
+        .map(PathBuf::from)
+        .context("Missing level path")?;
+    let output_path = args
+        .next()
+        .map(PathBuf::from)
+        .context("Missing output path")?;
     let max_depth: usize = args.next().and_then(|v| v.parse().ok()).unwrap_or(200);
 
     let level = load_level(&level_path)?;
@@ -89,7 +95,12 @@ fn solve_level(level: LevelDefinition, max_depth: usize) -> Result<Vec<Direction
             continue;
         }
 
-        for direction in [Direction::North, Direction::South, Direction::East, Direction::West] {
+        for direction in [
+            Direction::North,
+            Direction::South,
+            Direction::East,
+            Direction::West,
+        ] {
             let mut next = engine.clone();
             if !next.process_move(direction) {
                 continue;
@@ -153,7 +164,7 @@ fn direction_name(direction: Direction) -> &'static str {
 fn load_level(level_path: &PathBuf) -> Result<LevelDefinition> {
     let contents = fs::read_to_string(level_path)
         .with_context(|| format!("Failed to read level file: {}", level_path.display()))?;
-    let level: LevelDefinition = serde_json::from_str(&contents)
-        .with_context(|| "Failed to parse level JSON")?;
+    let level: LevelDefinition =
+        serde_json::from_str(&contents).with_context(|| "Failed to parse level JSON")?;
     Ok(level)
 }
