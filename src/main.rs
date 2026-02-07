@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 mod generate;
 mod levels;
+mod migration;
 mod playback;
 mod render;
 mod verify;
