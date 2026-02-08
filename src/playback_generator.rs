@@ -1,3 +1,4 @@
+use crate::levels;
 use anyhow::{Context, Result};
 use std::{
     fs,
@@ -152,6 +153,20 @@ pub fn get_solved_unsolved_lists(results: &[PlaybackResult]) -> (Vec<String>, Ve
     (solved, unsolved)
 }
 
+/// Update levels.toml solved status based on playback generation results
+#[allow(dead_code)]
+pub fn update_solved_status_from_results(results: &[PlaybackResult]) -> Result<()> {
+    for result in results {
+        levels::update_solved_status(&result.level_path, result.solved).with_context(|| {
+            format!(
+                "Failed to update solved status for level: {}",
+                result.level_id
+            )
+        })?;
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -281,5 +296,96 @@ mod tests {
 
         // Should succeed but return empty results
         assert_eq!(results.len(), 0);
+    }
+
+    #[test]
+    fn test_update_solved_status_from_results() {
+        use crate::levels::{LevelMeta, LevelsToml};
+
+        let temp_dir = TempDir::new().unwrap();
+        let levels_dir = temp_dir.path().join("levels");
+        fs::create_dir_all(&levels_dir).unwrap();
+
+        // Create test level files
+        let level1_path = levels_dir.join("level1.json");
+        let level2_path = levels_dir.join("level2.json");
+        fs::write(&level1_path, "{}").unwrap();
+        fs::write(&level2_path, "{}").unwrap();
+
+        // Create initial levels.toml with both levels marked as solved=true
+        let levels_toml = LevelsToml {
+            level: vec![
+                LevelMeta {
+                    id: Some("level1".to_string()),
+                    file: Some("level1.json".to_string()),
+                    author: Some("gsnake".to_string()),
+                    solved: Some(true),
+                    difficulty: Some("easy".to_string()),
+                    tags: Some(vec![]),
+                    description: Some("Level 1".to_string()),
+                },
+                LevelMeta {
+                    id: Some("level2".to_string()),
+                    file: Some("level2.json".to_string()),
+                    author: Some("gsnake".to_string()),
+                    solved: Some(true),
+                    difficulty: Some("easy".to_string()),
+                    tags: Some(vec![]),
+                    description: Some("Level 2".to_string()),
+                },
+            ],
+        };
+
+        let toml_path = levels_dir.join("levels.toml");
+        let toml_content = toml::to_string_pretty(&levels_toml).unwrap();
+        fs::write(&toml_path, toml_content).unwrap();
+
+        // Create playback results with mixed solved/unsolved
+        let results = vec![
+            PlaybackResult {
+                level_id: "level1".to_string(),
+                level_path: level1_path,
+                playback_path: PathBuf::from("level1-playback.json"),
+                solved: true,
+                error: None,
+            },
+            PlaybackResult {
+                level_id: "level2".to_string(),
+                level_path: level2_path,
+                playback_path: PathBuf::from("level2-playback.json"),
+                solved: false,
+                error: Some("No solution found".to_string()),
+            },
+        ];
+
+        // Update solved status from results
+        update_solved_status_from_results(&results).unwrap();
+
+        // Read back the levels.toml and verify
+        let updated_content = fs::read_to_string(&toml_path).unwrap();
+        let updated_toml: LevelsToml = toml::from_str(&updated_content).unwrap();
+
+        // level1 should still be solved=true
+        let level1_entry = updated_toml
+            .level
+            .iter()
+            .find(|l| l.file.as_deref() == Some("level1.json"))
+            .unwrap();
+        assert_eq!(level1_entry.solved, Some(true));
+
+        // level2 should now be solved=false
+        let level2_entry = updated_toml
+            .level
+            .iter()
+            .find(|l| l.file.as_deref() == Some("level2.json"))
+            .unwrap();
+        assert_eq!(level2_entry.solved, Some(false));
+    }
+
+    #[test]
+    fn test_update_solved_status_from_results_empty() {
+        let results = vec![];
+        // Should succeed with empty results
+        update_solved_status_from_results(&results).unwrap();
     }
 }
