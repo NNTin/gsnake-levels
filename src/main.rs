@@ -6,6 +6,7 @@ mod analysis;
 mod generate;
 mod levels;
 mod migration;
+mod name_generator;
 mod playback;
 mod render;
 mod verify;
