@@ -34,9 +34,14 @@ git config --unset core.hooksPath
 
 The pre-commit hook runs the following checks:
 
-1. **Format Check**: `cargo fmt --all -- --check`
-2. **Linting**: `cargo clippy --all-targets -- -D warnings`
-3. **Type Check**: `cargo check`
-4. **Build**: `cargo build`
+1. **Secret Scan**:
+   - Fails if `.env` is tracked by git
+   - Scans tracked files in the working tree for exact matches of `.env` values
+   - Reports only `KEY` + `file:line` without printing secret values
+   - Optional allowlist file: `.github/hooks/env-key-allowlist.txt` (one key per line)
+2. **Format Check**: `cargo fmt --all -- --check`
+3. **Linting**: `cargo clippy --all-targets -- -D warnings`
+4. **Type Check**: `cargo check`
+5. **Build**: `cargo build`
 
 **Note: Tests are NOT run in pre-commit hooks for speed.** Run tests manually with `cargo test` before pushing.

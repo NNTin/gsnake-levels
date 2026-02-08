@@ -6,6 +6,9 @@ set -e
 
 echo "Running pre-commit checks for gsnake-levels..."
 
+# Prevent committing secrets from .env into tracked files.
+.github/hooks/check-env-secrets.sh
+
 # Check code formatting
 echo "Checking formatting..."
 cargo fmt --all -- --check
