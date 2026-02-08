@@ -141,3 +141,70 @@ jobs:
           GIT_CONFIG_VALUE_0: false
           GIT_TERMINAL_PROMPT: 0
           CARGO_NET_GIT_FETCH_WITH_CLI: true
+
+  validate-levels:
+    name: Validate Levels
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout submodule
+        uses: actions/checkout@v4
+        with:
+          path: gsnake-levels
+
+      - name: Resolve gsnake-levels directory
+        run: |
+          for candidate in "." "gsnake-levels" "gsnake-levels/gsnake-levels"; do
+            if [ -f "${candidate}/Cargo.toml" ]; then
+              echo "LEVELS_DIR=${candidate}" >> "$GITHUB_ENV"
+              exit 0
+            fi
+          done
+          echo "Unable to locate gsnake-levels Cargo.toml" >&2
+          ls -la
+          find . -maxdepth 3 -type f -name Cargo.toml
+          exit 1
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Configure cargo for CI
+        run: |
+          mkdir -p .cargo
+          cat >> .cargo/config.toml << 'EOF'
+          [net]
+          git-fetch-with-cli = true
+          EOF
+        working-directory: ${{ env.LEVELS_DIR }}
+
+      - name: Configure git to use HTTPS for all GitHub repos
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.LEVELS_DIR }}/target
+          key: ${{ runner.os }}-cargo-validate-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Validate levels.toml files
+        run: cargo run -- validate-levels-toml
+        working-directory: ${{ env.LEVELS_DIR }}
+        env:
+          GIT_CONFIG_COUNT: 1
+          GIT_CONFIG_KEY_0: submodule.recurse
+          GIT_CONFIG_VALUE_0: false
+          GIT_TERMINAL_PROMPT: 0
+          CARGO_NET_GIT_FETCH_WITH_CLI: true
