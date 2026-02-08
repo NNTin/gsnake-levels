@@ -10,6 +10,7 @@ mod name_generator;
 mod playback;
 mod playback_generator;
 mod render;
+mod sync_metadata;
 mod toml_generator;
 mod verify;
 mod verify_all;
@@ -64,6 +65,13 @@ enum Command {
         /// Path to the playback JSON file
         playback: PathBuf,
     },
+
+    /// Sync level metadata (names, levels.toml, playbacks)
+    SyncMetadata {
+        /// Optional difficulty filter (easy, medium, or hard)
+        #[arg(long)]
+        difficulty: Option<String>,
+    },
 }
 
 fn main() -> Result<()> {
@@ -85,5 +93,16 @@ fn main() -> Result<()> {
             generate::run_generate_levels_json(filter.as_deref(), dry_run)
         },
         Command::Render { level, playback } => render::run_render(&level, &playback),
+        Command::SyncMetadata { difficulty } => {
+            let summary = sync_metadata::sync_metadata(difficulty.as_deref())?;
+            println!("\nSync completed successfully:");
+            println!("  - Generated {} names", summary.names_generated);
+            println!(
+                "  - Updated {} levels.toml files",
+                summary.toml_files_updated
+            );
+            println!("  - Created {} playbacks", summary.playbacks_created);
+            Ok(())
+        },
     }
 }

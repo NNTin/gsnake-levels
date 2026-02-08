@@ -4,5 +4,6 @@ pub mod migration;
 pub mod name_generator;
 pub mod playback;
 pub mod playback_generator;
+pub mod sync_metadata;
 pub mod toml_generator;
 pub mod verify;
