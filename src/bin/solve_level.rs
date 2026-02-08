@@ -119,7 +119,6 @@ fn solve_level(level: LevelDefinition, max_depth: usize) -> Result<Vec<Direction
             if !next.process_move(direction) {
                 continue;
             }
-            let _ = next.generate_frame();
             let mut next_path = path.clone();
             next_path.push(direction);
             queue.push_back((next, next_path));

@@ -7,6 +7,10 @@ use std::path::PathBuf;
 
 pub fn run_generate_levels_json(filter: Option<&str>, dry_run: bool, sync: bool) -> Result<()> {
     let levels_root = levels::find_levels_root()?;
+    let playbacks_root = levels_root
+        .parent()
+        .map(|parent| parent.join("playbacks"))
+        .unwrap_or_else(|| PathBuf::from("playbacks"));
     let difficulties = parse_filter(filter)?;
 
     // Run metadata sync if enabled (default behavior)
@@ -17,8 +21,12 @@ pub fn run_generate_levels_json(filter: Option<&str>, dry_run: bool, sync: bool)
         } else {
             Some(difficulties.join(","))
         };
-        let summary = sync_metadata::sync_metadata(difficulty_filter.as_deref())
-            .with_context(|| "Metadata sync failed, aborting generate-levels-json")?;
+        let summary = sync_metadata::sync_metadata_with_roots(
+            &levels_root,
+            &playbacks_root,
+            difficulty_filter.as_deref(),
+        )
+        .with_context(|| "Metadata sync failed, aborting generate-levels-json")?;
 
         eprintln!("Sync completed:");
         eprintln!("  - Generated {} names", summary.names_generated);

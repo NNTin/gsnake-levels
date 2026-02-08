@@ -17,10 +17,22 @@ pub struct SyncSummary {
 
 /// Sync metadata for all difficulties or a specific one
 pub fn sync_metadata(difficulty: Option<&str>) -> Result<SyncSummary> {
-    let levels_root = Path::new("levels");
+    let levels_root = crate::levels::find_levels_root()?;
+    let playbacks_root = levels_root
+        .parent()
+        .map(|parent| parent.join("playbacks"))
+        .unwrap_or_else(|| Path::new("playbacks").to_path_buf());
+    sync_metadata_with_roots(&levels_root, &playbacks_root, difficulty)
+}
 
+/// Sync metadata using explicit levels/playbacks roots.
+pub fn sync_metadata_with_roots(
+    levels_root: &Path,
+    playbacks_root: &Path,
+    difficulty: Option<&str>,
+) -> Result<SyncSummary> {
     if !levels_root.exists() {
-        anyhow::bail!("Levels directory not found. Run from gsnake-levels directory.");
+        anyhow::bail!("Levels directory not found: {}", levels_root.display());
     }
 
     let difficulties = if let Some(diff) = difficulty {
@@ -67,7 +79,6 @@ pub fn sync_metadata(difficulty: Option<&str>) -> Result<SyncSummary> {
 
     // Step 3: Generate playbacks
     println!("Generating playbacks...");
-    let playbacks_root = Path::new("playbacks");
     let max_depth = 500; // Default from US-006
 
     let playback_results = if let Some(diff) = difficulty {
