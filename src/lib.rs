@@ -6,4 +6,5 @@ pub mod playback;
 pub mod playback_generator;
 pub mod sync_metadata;
 pub mod toml_generator;
+pub mod validate_levels_toml;
 pub mod verify;

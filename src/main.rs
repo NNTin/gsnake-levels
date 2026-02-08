@@ -12,6 +12,7 @@ mod playback_generator;
 mod render;
 mod sync_metadata;
 mod toml_generator;
+mod validate_levels_toml;
 mod verify;
 mod verify_all;
 
@@ -76,6 +77,9 @@ enum Command {
         #[arg(long)]
         difficulty: Option<String>,
     },
+
+    /// Validate levels.toml files for all difficulties
+    ValidateLevelsToml,
 }
 
 fn main() -> Result<()> {
@@ -113,5 +117,6 @@ fn main() -> Result<()> {
             println!("  - Created {} playbacks", summary.playbacks_created);
             Ok(())
         },
+        Command::ValidateLevelsToml => validate_levels_toml::run_validate_levels_toml(),
     }
 }
