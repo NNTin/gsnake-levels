@@ -1,12 +1,35 @@
 use crate::levels;
+use crate::sync_metadata;
 use anyhow::{bail, Context, Result};
 use gsnake_core::LevelDefinition;
 use std::collections::HashSet;
 use std::path::PathBuf;
 
-pub fn run_generate_levels_json(filter: Option<&str>, dry_run: bool) -> Result<()> {
+pub fn run_generate_levels_json(filter: Option<&str>, dry_run: bool, sync: bool) -> Result<()> {
     let levels_root = levels::find_levels_root()?;
     let difficulties = parse_filter(filter)?;
+
+    // Run metadata sync if enabled (default behavior)
+    if sync {
+        eprintln!("Running metadata sync...");
+        let difficulty_filter = if difficulties.len() == levels::DEFAULT_DIFFICULTIES.len() {
+            None
+        } else {
+            Some(difficulties.join(","))
+        };
+        let summary = sync_metadata::sync_metadata(difficulty_filter.as_deref())
+            .with_context(|| "Metadata sync failed, aborting generate-levels-json")?;
+
+        eprintln!("Sync completed:");
+        eprintln!("  - Generated {} names", summary.names_generated);
+        eprintln!(
+            "  - Updated {} levels.toml files",
+            summary.toml_files_updated
+        );
+        eprintln!("  - Created {} playbacks", summary.playbacks_created);
+        eprintln!();
+    }
+
     let mut aggregated: Vec<LevelDefinition> = Vec::new();
 
     for difficulty in difficulties {

@@ -55,6 +55,10 @@ enum Command {
         /// Dry run: do not output JSON
         #[arg(long)]
         dry_run: bool,
+
+        /// Disable automatic metadata sync before aggregation
+        #[arg(long)]
+        no_sync: bool,
     },
 
     /// Render asciinema and SVG documentation
@@ -89,8 +93,13 @@ fn main() -> Result<()> {
         },
         Command::Replay { level, playback } => render::run_replay(&level, &playback),
         Command::VerifyAll => verify_all::run_verify_all(),
-        Command::GenerateLevelsJson { filter, dry_run } => {
-            generate::run_generate_levels_json(filter.as_deref(), dry_run)
+        Command::GenerateLevelsJson {
+            filter,
+            dry_run,
+            no_sync,
+        } => {
+            let sync = !no_sync;
+            generate::run_generate_levels_json(filter.as_deref(), dry_run, sync)
         },
         Command::Render { level, playback } => render::run_render(&level, &playback),
         Command::SyncMetadata { difficulty } => {
