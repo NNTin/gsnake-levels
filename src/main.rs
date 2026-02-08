@@ -8,6 +8,7 @@ mod levels;
 mod migration;
 mod name_generator;
 mod playback;
+mod playback_generator;
 mod render;
 mod toml_generator;
 mod verify;
