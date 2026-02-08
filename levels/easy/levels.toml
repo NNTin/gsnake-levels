@@ -1,26 +1,17 @@
 [[level]]
-id = "level_001"
-file = "level_001.json"
+id = "level-1769977122223-g36bwe"
+file = "level-1769977122223-g36bwe.json"
 author = "gsnake"
 solved = true
 difficulty = "easy"
 tags = []
-description = "First Steps"
+description = "Floating Spike Islands Dense"
 
 [[level]]
-id = "level_002"
-file = "level_002.json"
+id = "level-1769978263873-eupaj5"
+file = "level-1769978263873-eupaj5.json"
 author = "gsnake"
 solved = true
 difficulty = "easy"
 tags = []
-description = "Floating Drop"
-
-[[level]]
-id = "level_003"
-file = "level_003.json"
-author = "gsnake"
-solved = true
-difficulty = "easy"
-tags = []
-description = "Food Bridge"
+description = "Stone Spike Bridge"

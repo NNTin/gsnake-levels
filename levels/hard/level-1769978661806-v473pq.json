@@ -1,25 +1,27 @@
 {
-  "id": "1769978844153-u4q0jk",
-  "name": "reverse carefully",
   "difficulty": "medium",
-  "gridSize": {
-    "width": 20,
-    "height": 15
+  "exit": {
+    "x": 13,
+    "y": 5
   },
-  "snake": [
+  "fallingFood": [],
+  "floatingFood": [
     {
-      "x": 5,
-      "y": 2
+      "x": 1,
+      "y": 3
     },
     {
-      "x": 4,
-      "y": 2
-    },
-    {
-      "x": 3,
-      "y": 2
+      "x": 6,
+      "y": 7
     }
   ],
+  "food": [],
+  "gridSize": {
+    "height": 15,
+    "width": 20
+  },
+  "id": 20,
+  "name": "Floating Spike Islands",
   "obstacles": [
     {
       "x": 2,
@@ -118,24 +120,21 @@
       "y": 10
     }
   ],
-  "food": [],
-  "exit": {
-    "x": 13,
-    "y": 5
-  },
-  "snakeDirection": "East",
-  "floatingFood": [
+  "snake": [
     {
-      "x": 1,
-      "y": 3
+      "x": 5,
+      "y": 2
     },
     {
-      "x": 6,
-      "y": 7
+      "x": 4,
+      "y": 2
+    },
+    {
+      "x": 3,
+      "y": 2
     }
   ],
-  "fallingFood": [],
-  "stones": [],
+  "snakeDirection": "East",
   "spikes": [
     {
       "x": 9,
@@ -182,5 +181,6 @@
       "y": 11
     }
   ],
+  "stones": [],
   "totalFood": 2
 }

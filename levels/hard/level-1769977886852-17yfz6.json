@@ -1,25 +1,39 @@
 {
-  "id": "1769977886852-17yfz6",
-  "name": "just enough",
   "difficulty": "medium",
-  "gridSize": {
-    "width": 20,
-    "height": 15
+  "exit": {
+    "x": 8,
+    "y": 7
   },
-  "snake": [
+  "fallingFood": [],
+  "floatingFood": [
     {
-      "x": 7,
-      "y": 6
+      "x": 2,
+      "y": 3
+    },
+    {
+      "x": 3,
+      "y": 3
     },
     {
       "x": 6,
-      "y": 6
+      "y": 4
     },
     {
-      "x": 5,
-      "y": 6
+      "x": 6,
+      "y": 5
+    },
+    {
+      "x": 8,
+      "y": 5
     }
   ],
+  "food": [],
+  "gridSize": {
+    "height": 15,
+    "width": 20
+  },
+  "id": 19,
+  "name": "Floating Spike Islands 2",
   "obstacles": [
     {
       "x": 1,
@@ -202,36 +216,21 @@
       "y": 8
     }
   ],
-  "food": [],
-  "exit": {
-    "x": 8,
-    "y": 7
-  },
-  "snakeDirection": "East",
-  "floatingFood": [
+  "snake": [
     {
-      "x": 2,
-      "y": 3
-    },
-    {
-      "x": 3,
-      "y": 3
+      "x": 7,
+      "y": 6
     },
     {
       "x": 6,
-      "y": 4
+      "y": 6
     },
     {
-      "x": 6,
-      "y": 5
-    },
-    {
-      "x": 8,
-      "y": 5
+      "x": 5,
+      "y": 6
     }
   ],
-  "fallingFood": [],
-  "stones": [],
+  "snakeDirection": "East",
   "spikes": [
     {
       "x": 15,
@@ -278,5 +277,6 @@
       "y": 12
     }
   ],
+  "stones": [],
   "totalFood": 5
 }

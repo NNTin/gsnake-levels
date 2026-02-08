@@ -1,35 +1,26 @@
 [[level]]
-id = "level_001"
-file = "level_001.json"
+id = "level-1769975926647-nv3aqb"
+file = "level-1769975926647-nv3aqb.json"
 author = "gsnake"
 solved = true
 difficulty = "medium"
 tags = []
-description = "Stone Run"
+description = "Floating Stone Spike Islands"
 
 [[level]]
-id = "level_002"
-file = "level_002.json"
+id = "level-1769976243963-g777pk"
+file = "level-1769976243963-g777pk.json"
 author = "gsnake"
 solved = true
 difficulty = "medium"
 tags = []
-description = "Mixed Signals"
+description = "Floating Spike Islands Dense 2"
 
 [[level]]
-id = "level_003"
-file = "level_003.json"
+id = "level-1769976545160-dvt1ot"
+file = "level-1769976545160-dvt1ot.json"
 author = "gsnake"
 solved = true
 difficulty = "medium"
 tags = []
-description = "Stone Switch"
-
-[[level]]
-id = "level_004"
-file = "level_004.json"
-author = "gsnake"
-solved = true
-difficulty = "medium"
-tags = []
-description = "Stone Zigzag"
+description = "Floating Spike Bridge"

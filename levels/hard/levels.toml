@@ -1,35 +1,26 @@
 [[level]]
-id = "level_001"
-file = "level_001.json"
+id = "level-1769977459516-uoh6te"
+file = "level-1769977459516-uoh6te.json"
 author = "gsnake"
-solved = true
+solved = false
 difficulty = "hard"
 tags = []
-description = "Spike Weave"
+description = "Floating Spike Islands 3"
 
 [[level]]
-id = "level_002"
-file = "level_002.json"
+id = "level-1769977886852-17yfz6"
+file = "level-1769977886852-17yfz6.json"
 author = "gsnake"
 solved = true
 difficulty = "hard"
 tags = []
-description = "Gauntlet"
+description = "Floating Spike Islands 2"
 
 [[level]]
-id = "level_003"
-file = "level_003.json"
+id = "level-1769978661806-v473pq"
+file = "level-1769978661806-v473pq.json"
 author = "gsnake"
-solved = true
+solved = false
 difficulty = "hard"
 tags = []
-description = "Spiked Lift"
-
-[[level]]
-id = "level_004"
-file = "level_004.json"
-author = "gsnake"
-solved = true
-difficulty = "hard"
-tags = []
-description = "Food Perch"
+description = "Floating Spike Islands"

@@ -1,25 +1,39 @@
 {
-  "id": "1769975926647-nv3aqb",
-  "name": "spiky throat",
   "difficulty": "medium",
-  "gridSize": {
-    "width": 9,
-    "height": 20
+  "exit": {
+    "x": 4,
+    "y": 1
   },
-  "snake": [
+  "fallingFood": [],
+  "floatingFood": [
     {
       "x": 5,
-      "y": 10
+      "y": 7
     },
     {
       "x": 4,
-      "y": 10
+      "y": 8
     },
     {
       "x": 3,
-      "y": 10
+      "y": 9
+    },
+    {
+      "x": 3,
+      "y": 11
+    },
+    {
+      "x": 5,
+      "y": 11
     }
   ],
+  "food": [],
+  "gridSize": {
+    "height": 20,
+    "width": 9
+  },
+  "id": 15,
+  "name": "Floating Stone Spike Islands",
   "obstacles": [
     {
       "x": 2,
@@ -146,45 +160,21 @@
       "y": 11
     }
   ],
-  "food": [],
-  "exit": {
-    "x": 4,
-    "y": 1
-  },
-  "snakeDirection": "East",
-  "floatingFood": [
+  "snake": [
     {
       "x": 5,
-      "y": 7
+      "y": 10
     },
     {
       "x": 4,
-      "y": 8
+      "y": 10
     },
     {
       "x": 3,
-      "y": 9
-    },
-    {
-      "x": 3,
-      "y": 11
-    },
-    {
-      "x": 5,
-      "y": 11
+      "y": 10
     }
   ],
-  "fallingFood": [],
-  "stones": [
-    {
-      "x": 3,
-      "y": 8
-    },
-    {
-      "x": 5,
-      "y": 9
-    }
-  ],
+  "snakeDirection": "East",
   "spikes": [
     {
       "x": 3,
@@ -273,6 +263,16 @@
     {
       "x": 7,
       "y": 10
+    }
+  ],
+  "stones": [
+    {
+      "x": 3,
+      "y": 8
+    },
+    {
+      "x": 5,
+      "y": 9
     }
   ],
   "totalFood": 5

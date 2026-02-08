@@ -1,25 +1,23 @@
 {
-  "id": "1769977122223-g36bwe",
-  "name": "todoname",
   "difficulty": "easy",
-  "gridSize": {
-    "width": 15,
-    "height": 10
+  "exit": {
+    "x": 12,
+    "y": 2
   },
-  "snake": [
-    {
-      "x": 5,
-      "y": 2
-    },
-    {
-      "x": 4,
-      "y": 2
-    },
+  "fallingFood": [],
+  "floatingFood": [
     {
       "x": 3,
-      "y": 2
+      "y": 4
     }
   ],
+  "food": [],
+  "gridSize": {
+    "height": 10,
+    "width": 15
+  },
+  "id": 13,
+  "name": "Floating Spike Islands Dense",
   "obstacles": [
     {
       "x": 1,
@@ -198,20 +196,21 @@
       "y": 9
     }
   ],
-  "food": [],
-  "exit": {
-    "x": 12,
-    "y": 2
-  },
-  "snakeDirection": "East",
-  "floatingFood": [
+  "snake": [
+    {
+      "x": 5,
+      "y": 2
+    },
+    {
+      "x": 4,
+      "y": 2
+    },
     {
       "x": 3,
-      "y": 4
+      "y": 2
     }
   ],
-  "fallingFood": [],
-  "stones": [],
+  "snakeDirection": "East",
   "spikes": [
     {
       "x": 7,
@@ -238,5 +237,6 @@
       "y": 9
     }
   ],
+  "stones": [],
   "totalFood": 1
 }
