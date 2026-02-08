@@ -2,7 +2,7 @@
 id = "level-1769977459516-uoh6te"
 file = "level-1769977459516-uoh6te.json"
 author = "gsnake"
-solved = false
+solved = true
 difficulty = "hard"
 tags = []
 description = "Floating Spike Islands 3"
@@ -20,7 +20,7 @@ description = "Floating Spike Islands 2"
 id = "level-1769978661806-v473pq"
 file = "level-1769978661806-v473pq.json"
 author = "gsnake"
-solved = false
+solved = true
 difficulty = "hard"
 tags = []
 description = "Floating Spike Islands"
