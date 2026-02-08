@@ -9,6 +9,7 @@ mod migration;
 mod name_generator;
 mod playback;
 mod render;
+mod toml_generator;
 mod verify;
 mod verify_all;
 
