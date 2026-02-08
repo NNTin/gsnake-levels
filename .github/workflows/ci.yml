@@ -276,9 +276,7 @@ jobs:
           fi
 
       - name: Generate coverage report
-        run: |
-          mkdir -p target/llvm-cov
-          cargo llvm-cov --workspace --all-targets --fail-under-lines 62 --lcov --output-path target/llvm-cov/lcov.info
+        run: ./scripts/coverage.sh
         working-directory: ${{ env.LEVELS_DIR }}
         env:
           GIT_CONFIG_COUNT: 1

@@ -82,6 +82,17 @@ act -n  # dry run mode
 cargo build
 ```
 
+## Coverage
+
+```bash
+./scripts/coverage.sh
+```
+
+Coverage artifacts are written to:
+```text
+target/llvm-cov/lcov.info
+```
+
 Usage:
 
 ```text
