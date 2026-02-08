@@ -1,4 +1,5 @@
 use anyhow::{bail, Context, Result};
+use clap::Parser;
 use gsnake_core::{engine::GameEngine, Direction, GameStatus, LevelDefinition};
 use serde::Serialize;
 use std::{
@@ -6,6 +7,21 @@ use std::{
     fs,
     path::PathBuf,
 };
+
+#[derive(Parser)]
+#[command(name = "solve_level")]
+#[command(about = "Solve a gSnake level and generate playback solution")]
+struct Args {
+    /// Path to the level JSON file
+    level_path: PathBuf,
+
+    /// Path to save the playback solution JSON
+    output_path: PathBuf,
+
+    /// Maximum search depth for solver (default: 500)
+    #[arg(short = 'd', long = "max-depth", default_value = "500")]
+    max_depth: usize,
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 enum StatusCode {
@@ -36,20 +52,11 @@ struct PlaybackStep {
 }
 
 fn main() -> Result<()> {
-    let mut args = std::env::args().skip(1);
-    let level_path = args
-        .next()
-        .map(PathBuf::from)
-        .context("Missing level path")?;
-    let output_path = args
-        .next()
-        .map(PathBuf::from)
-        .context("Missing output path")?;
-    let max_depth: usize = args.next().and_then(|v| v.parse().ok()).unwrap_or(200);
+    let args = Args::parse();
 
-    let level = load_level(&level_path)?;
-    let solution = solve_level(level, max_depth)
-        .with_context(|| format!("No solution found within depth {max_depth}"))?;
+    let level = load_level(&args.level_path)?;
+    let solution = solve_level(level, args.max_depth)
+        .with_context(|| format!("No solution found within depth {}", args.max_depth))?;
 
     let steps: Vec<PlaybackStep> = solution
         .into_iter()
@@ -59,14 +66,21 @@ fn main() -> Result<()> {
         })
         .collect();
 
-    if let Some(parent) = output_path.parent() {
+    if let Some(parent) = args.output_path.parent() {
         fs::create_dir_all(parent)
             .with_context(|| format!("Failed to create {}", parent.display()))?;
     }
-    fs::write(&output_path, serde_json::to_string_pretty(&steps)? + "\n")
-        .with_context(|| format!("Failed to write {}", output_path.display()))?;
+    fs::write(
+        &args.output_path,
+        serde_json::to_string_pretty(&steps)? + "\n",
+    )
+    .with_context(|| format!("Failed to write {}", args.output_path.display()))?;
 
-    println!("Solved {} in {} moves", level_path.display(), steps.len());
+    println!(
+        "Solved {} in {} moves",
+        args.level_path.display(),
+        steps.len()
+    );
     Ok(())
 }
 
