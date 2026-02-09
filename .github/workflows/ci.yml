@@ -286,8 +286,26 @@ jobs:
           CARGO_NET_GIT_FETCH_WITH_CLI: true
 
       - name: Upload coverage artifact
-        if: always()
+        if: ${{ always() && env.ACT != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: gsnake-levels-coverage
           path: ${{ env.LEVELS_DIR }}/target/llvm-cov
+
+  required-merge-gates:
+    name: Required Merge Gates
+    if: ${{ always() && github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    needs:
+      - coverage
+    steps:
+      - name: Validate required checks
+        run: |
+          echo "coverage: ${{ needs.coverage.result }}"
+
+          if [[ "${{ needs.coverage.result }}" != "success" ]]; then
+            echo "Coverage merge gate failed."
+            exit 1
+          fi
+
+          echo "Coverage merge gate passed."
