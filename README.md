@@ -93,6 +93,9 @@ Coverage artifacts are written to:
 target/llvm-cov/lcov.info
 ```
 
+The coverage command enforces a minimum line-coverage gate of `80%` via
+`cargo llvm-cov --fail-under-lines 80`.
+
 Usage:
 
 ```text
