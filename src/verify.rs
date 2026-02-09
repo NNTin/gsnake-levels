@@ -69,6 +69,41 @@ fn load_level(level_path: &Path) -> Result<LevelDefinition> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
+    use std::fs;
+    use tempfile::TempDir;
+
+    fn write_test_level(path: &Path, exit_x: i32, spikes: &[(i32, i32)]) {
+        let spikes_json: Vec<_> = spikes
+            .iter()
+            .map(|(x, y)| json!({ "x": x, "y": y }))
+            .collect();
+        let level = json!({
+            "id": 1,
+            "name": "Test Level",
+            "difficulty": "easy",
+            "gridSize": { "width": 5, "height": 5 },
+            "snake": [{ "x": 0, "y": 0 }],
+            "snakeDirection": "East",
+            "obstacles": [],
+            "food": [],
+            "exit": { "x": exit_x, "y": 0 },
+            "floatingFood": [],
+            "fallingFood": [],
+            "stones": [],
+            "spikes": spikes_json,
+            "totalFood": 0
+        });
+        fs::write(path, serde_json::to_string_pretty(&level).unwrap()).unwrap();
+    }
+
+    fn write_playback(path: &Path, keys: &[&str]) {
+        let steps: Vec<_> = keys
+            .iter()
+            .map(|key| json!({ "key": key, "delay_ms": 1 }))
+            .collect();
+        fs::write(path, serde_json::to_string_pretty(&steps).unwrap()).unwrap();
+    }
 
     #[test]
     fn test_resolve_playback_path_valid_easy_level() {
@@ -164,5 +199,74 @@ mod tests {
             playback_path,
             PathBuf::from("some/nested/playbacks/easy/level_001.json")
         );
+    }
+
+    #[test]
+    fn test_verify_level_missing_level_file() {
+        let temp_dir = TempDir::new().unwrap();
+        let missing_level_path = temp_dir.path().join("missing_level.json");
+        let playback_path = temp_dir.path().join("playback.json");
+        write_playback(&playback_path, &["Right"]);
+
+        let error = verify_level(&missing_level_path, &playback_path).unwrap_err();
+        let message = format!("{:#}", error);
+
+        assert!(message.contains("Failed to load level"));
+        assert!(message.contains("Failed to read level file"));
+    }
+
+    #[test]
+    fn test_verify_level_missing_playback_file() {
+        let temp_dir = TempDir::new().unwrap();
+        let level_path = temp_dir.path().join("level.json");
+        let missing_playback_path = temp_dir.path().join("missing_playback.json");
+        write_test_level(&level_path, 4, &[]);
+
+        let error = verify_level(&level_path, &missing_playback_path).unwrap_err();
+        let message = format!("{:#}", error);
+
+        assert!(message.contains("Failed to load playback"));
+        assert!(message.contains("Failed to read playback file"));
+    }
+
+    #[test]
+    fn test_verify_level_malformed_playback_file() {
+        let temp_dir = TempDir::new().unwrap();
+        let level_path = temp_dir.path().join("level.json");
+        let playback_path = temp_dir.path().join("playback.json");
+        write_test_level(&level_path, 4, &[]);
+        fs::write(&playback_path, "{not-json}").unwrap();
+
+        let error = verify_level(&level_path, &playback_path).unwrap_err();
+        let message = format!("{:#}", error);
+
+        assert!(message.contains("Failed to load playback"));
+        assert!(message.contains("Failed to parse playback JSON"));
+    }
+
+    #[test]
+    fn test_verify_level_returns_not_complete_error() {
+        let temp_dir = TempDir::new().unwrap();
+        let level_path = temp_dir.path().join("level.json");
+        let playback_path = temp_dir.path().join("playback.json");
+        write_test_level(&level_path, 4, &[]);
+        write_playback(&playback_path, &["Right"]);
+
+        let error = verify_level(&level_path, &playback_path).unwrap_err();
+        assert!(error
+            .to_string()
+            .contains("Playback did not complete the level"));
+    }
+
+    #[test]
+    fn test_verify_level_returns_game_over_error() {
+        let temp_dir = TempDir::new().unwrap();
+        let level_path = temp_dir.path().join("level.json");
+        let playback_path = temp_dir.path().join("playback.json");
+        write_test_level(&level_path, 4, &[(1, 0)]);
+        write_playback(&playback_path, &["Right"]);
+
+        let error = verify_level(&level_path, &playback_path).unwrap_err();
+        assert!(error.to_string().contains("Playback resulted in Game Over"));
     }
 }
