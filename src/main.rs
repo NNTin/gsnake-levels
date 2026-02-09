@@ -11,6 +11,8 @@ mod playback;
 mod playback_generator;
 mod render;
 mod sync_metadata;
+#[cfg(test)]
+mod test_cwd;
 mod toml_generator;
 mod validate_levels_toml;
 mod verify;

@@ -109,3 +109,143 @@ fn load_level(level_path: &PathBuf) -> Result<LevelDefinition> {
         serde_json::from_str(&contents).with_context(|| "Failed to parse level JSON")?;
     Ok(level)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::levels::{LevelMeta, LevelsToml};
+    use std::fs;
+    use std::path::Path;
+    use tempfile::TempDir;
+
+    fn create_test_level_json(levels_dir: &Path, filename: &str, name: &str) -> Result<()> {
+        fs::create_dir_all(levels_dir)?;
+        let level_json = serde_json::json!({
+            "id": 1,
+            "name": name,
+            "difficulty": "easy",
+            "gridSize": { "width": 10, "height": 10 },
+            "snake": [{ "x": 0, "y": 0 }],
+            "obstacles": [],
+            "food": [{ "x": 1, "y": 0 }],
+            "exit": { "x": 5, "y": 5 },
+            "snakeDirection": "East",
+            "floatingFood": [],
+            "fallingFood": [],
+            "stones": [],
+            "spikes": [],
+            "totalFood": 1
+        });
+        fs::write(
+            levels_dir.join(filename),
+            serde_json::to_string_pretty(&level_json)?,
+        )?;
+        Ok(())
+    }
+
+    fn write_levels_toml(levels_dir: &Path, difficulty: &str, file: &str) -> Result<()> {
+        let levels_toml = LevelsToml {
+            level: vec![LevelMeta {
+                id: Some(file.trim_end_matches(".json").to_string()),
+                file: Some(file.to_string()),
+                author: Some("gsnake".to_string()),
+                solved: Some(true),
+                difficulty: Some(difficulty.to_string()),
+                tags: Some(vec![]),
+                description: Some("Test level".to_string()),
+            }],
+        };
+        let output = toml::to_string_pretty(&levels_toml)?;
+        fs::write(levels_dir.join("levels.toml"), output)?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_filter_defaults_to_all_difficulties() -> Result<()> {
+        assert_eq!(parse_filter(None)?, levels::DEFAULT_DIFFICULTIES.to_vec());
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_filter_is_case_insensitive_and_ordered() -> Result<()> {
+        let filtered = parse_filter(Some(" hard , EASY "))?;
+        assert_eq!(filtered, vec!["easy", "hard"]);
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_filter_unknown_value_fails() {
+        let result = parse_filter(Some("legendary"));
+        assert!(result.is_err());
+        let error = result
+            .expect_err("Expected invalid filter error")
+            .to_string();
+        assert!(error.contains("Filter did not match any known difficulty"));
+    }
+
+    #[test]
+    fn test_run_generate_levels_json_success_from_package_directory() -> Result<()> {
+        let _lock = crate::test_cwd::cwd_mutex()
+            .lock()
+            .expect("Failed to lock cwd mutex");
+
+        let temp_dir = TempDir::new()?;
+        let easy_dir = temp_dir.path().join("levels/easy");
+        create_test_level_json(&easy_dir, "level_001.json", "Package Level")?;
+        write_levels_toml(&easy_dir, "easy", "level_001.json")?;
+        let _cwd = crate::test_cwd::CwdGuard::set(temp_dir.path());
+
+        run_generate_levels_json(Some("easy"), true, false)
+    }
+
+    #[test]
+    fn test_run_generate_levels_json_success_from_repo_root() -> Result<()> {
+        let _lock = crate::test_cwd::cwd_mutex()
+            .lock()
+            .expect("Failed to lock cwd mutex");
+
+        let temp_dir = TempDir::new()?;
+        let easy_dir = temp_dir.path().join("gsnake-levels/levels/easy");
+        create_test_level_json(&easy_dir, "level_001.json", "Nested Level")?;
+        write_levels_toml(&easy_dir, "easy", "level_001.json")?;
+        let _cwd = crate::test_cwd::CwdGuard::set(temp_dir.path());
+
+        run_generate_levels_json(Some("easy"), true, false)
+    }
+
+    #[test]
+    fn test_run_generate_levels_json_missing_level_file_fails() -> Result<()> {
+        let _lock = crate::test_cwd::cwd_mutex()
+            .lock()
+            .expect("Failed to lock cwd mutex");
+
+        let temp_dir = TempDir::new()?;
+        let easy_dir = temp_dir.path().join("levels/easy");
+        fs::create_dir_all(&easy_dir)?;
+        write_levels_toml(&easy_dir, "easy", "missing_level.json")?;
+        let _cwd = crate::test_cwd::CwdGuard::set(temp_dir.path());
+
+        let result = run_generate_levels_json(Some("easy"), true, false);
+        assert!(result.is_err());
+        let error = result
+            .expect_err("Expected missing level error")
+            .to_string();
+        assert!(error.contains("Level file not found"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_run_generate_levels_json_with_sync_enabled() -> Result<()> {
+        let _lock = crate::test_cwd::cwd_mutex()
+            .lock()
+            .expect("Failed to lock cwd mutex");
+
+        let temp_dir = TempDir::new()?;
+        fs::create_dir_all(temp_dir.path().join("levels/easy"))?;
+        fs::create_dir_all(temp_dir.path().join("levels/medium"))?;
+        fs::create_dir_all(temp_dir.path().join("levels/hard"))?;
+        let _cwd = crate::test_cwd::CwdGuard::set(temp_dir.path());
+
+        run_generate_levels_json(None, true, true)
+    }
+}

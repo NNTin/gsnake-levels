@@ -9,6 +9,7 @@ use crate::playback_generator::{
 };
 use crate::toml_generator::{generate_all_levels_toml, generate_levels_toml};
 
+#[derive(Debug)]
 pub struct SyncSummary {
     pub names_generated: usize,
     pub toml_files_updated: usize,
@@ -25,6 +26,30 @@ pub fn sync_metadata(difficulty: Option<&str>) -> Result<SyncSummary> {
     sync_metadata_with_roots(&levels_root, &playbacks_root, difficulty)
 }
 
+fn resolve_difficulties(difficulty: Option<&str>) -> Result<Vec<&'static str>> {
+    if let Some(raw) = difficulty {
+        let normalized = raw.trim().to_ascii_lowercase();
+        if normalized.is_empty() {
+            anyhow::bail!("Difficulty filter cannot be empty");
+        }
+
+        if let Some(selected) = DEFAULT_DIFFICULTIES
+            .iter()
+            .copied()
+            .find(|item| *item == normalized)
+        {
+            return Ok(vec![selected]);
+        }
+
+        anyhow::bail!(
+            "Unknown difficulty '{}'. Expected one of: easy, medium, hard",
+            raw
+        );
+    }
+
+    Ok(DEFAULT_DIFFICULTIES.to_vec())
+}
+
 /// Sync metadata using explicit levels/playbacks roots.
 pub fn sync_metadata_with_roots(
     levels_root: &Path,
@@ -35,11 +60,7 @@ pub fn sync_metadata_with_roots(
         anyhow::bail!("Levels directory not found: {}", levels_root.display());
     }
 
-    let difficulties = if let Some(diff) = difficulty {
-        vec![diff]
-    } else {
-        DEFAULT_DIFFICULTIES.to_vec()
-    };
+    let difficulties = resolve_difficulties(difficulty)?;
 
     let mut total_names = 0;
     let mut used_names = HashSet::new();
@@ -81,7 +102,8 @@ pub fn sync_metadata_with_roots(
     println!("Generating playbacks...");
     let max_depth = 500; // Default from US-006
 
-    let playback_results = if let Some(diff) = difficulty {
+    let playback_results = if difficulty.is_some() {
+        let diff = difficulties[0];
         let levels_dir = levels_root.join(diff);
         let playbacks_dir = playbacks_root.join(diff);
         generate_playbacks_for_difficulty(&levels_dir, &playbacks_dir, max_depth)
@@ -104,4 +126,117 @@ pub fn sync_metadata_with_roots(
         toml_files_updated: toml_results.len(),
         playbacks_created: solved_count,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::TempDir;
+
+    fn create_difficulty_dirs(levels_root: &Path, difficulties: &[&str]) -> Result<()> {
+        for difficulty in difficulties {
+            fs::create_dir_all(levels_root.join(difficulty))?;
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_sync_metadata_with_roots_success_all_difficulties() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let levels_root = temp_dir.path().join("levels");
+        let playbacks_root = temp_dir.path().join("playbacks");
+
+        create_difficulty_dirs(&levels_root, &DEFAULT_DIFFICULTIES)?;
+
+        let summary = sync_metadata_with_roots(&levels_root, &playbacks_root, None)?;
+        assert_eq!(summary.names_generated, 0);
+        assert_eq!(summary.toml_files_updated, 3);
+        assert_eq!(summary.playbacks_created, 0);
+
+        assert!(levels_root.join("easy/levels.toml").exists());
+        assert!(levels_root.join("medium/levels.toml").exists());
+        assert!(levels_root.join("hard/levels.toml").exists());
+        Ok(())
+    }
+
+    #[test]
+    fn test_sync_metadata_with_roots_missing_levels_root_fails() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let levels_root = temp_dir.path().join("missing-levels");
+        let playbacks_root = temp_dir.path().join("playbacks");
+
+        let result = sync_metadata_with_roots(&levels_root, &playbacks_root, None);
+        assert!(result.is_err());
+        let error = result
+            .expect_err("Expected missing levels root error")
+            .to_string();
+        assert!(error.contains("Levels directory not found"));
+    }
+
+    #[test]
+    fn test_sync_metadata_with_roots_rejects_unknown_difficulty() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let levels_root = temp_dir.path().join("levels");
+        let playbacks_root = temp_dir.path().join("playbacks");
+        create_difficulty_dirs(&levels_root, &["easy"])?;
+
+        let result = sync_metadata_with_roots(&levels_root, &playbacks_root, Some("legendary"));
+        assert!(result.is_err());
+        let error = result
+            .expect_err("Expected unknown difficulty error")
+            .to_string();
+        assert!(error.contains("Unknown difficulty"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_sync_metadata_with_roots_normalizes_difficulty_filter() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let levels_root = temp_dir.path().join("levels");
+        let playbacks_root = temp_dir.path().join("playbacks");
+        create_difficulty_dirs(&levels_root, &["easy"])?;
+
+        let summary = sync_metadata_with_roots(&levels_root, &playbacks_root, Some(" EASY "))?;
+        assert_eq!(summary.names_generated, 0);
+        assert_eq!(summary.toml_files_updated, 1);
+        assert_eq!(summary.playbacks_created, 0);
+        assert!(levels_root.join("easy/levels.toml").exists());
+        Ok(())
+    }
+
+    #[test]
+    fn test_sync_metadata_resolves_levels_root_from_package_directory() -> Result<()> {
+        let _lock = crate::test_cwd::cwd_mutex()
+            .lock()
+            .expect("Failed to lock cwd mutex");
+
+        let temp_dir = TempDir::new()?;
+        let levels_root = temp_dir.path().join("levels");
+        create_difficulty_dirs(&levels_root, &DEFAULT_DIFFICULTIES)?;
+        let _cwd = crate::test_cwd::CwdGuard::set(temp_dir.path());
+
+        let summary = sync_metadata(None)?;
+        assert_eq!(summary.toml_files_updated, 3);
+        assert!(levels_root.join("easy/levels.toml").exists());
+        Ok(())
+    }
+
+    #[test]
+    fn test_sync_metadata_resolves_levels_root_from_repo_root() -> Result<()> {
+        let _lock = crate::test_cwd::cwd_mutex()
+            .lock()
+            .expect("Failed to lock cwd mutex");
+
+        let temp_dir = TempDir::new()?;
+        let package_root = temp_dir.path().join("gsnake-levels");
+        let levels_root = package_root.join("levels");
+        create_difficulty_dirs(&levels_root, &DEFAULT_DIFFICULTIES)?;
+        let _cwd = crate::test_cwd::CwdGuard::set(temp_dir.path());
+
+        let summary = sync_metadata(None)?;
+        assert_eq!(summary.toml_files_updated, 3);
+        assert!(levels_root.join("easy/levels.toml").exists());
+        Ok(())
+    }
 }
