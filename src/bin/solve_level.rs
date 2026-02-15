@@ -85,7 +85,7 @@ fn main() -> Result<()> {
 }
 
 fn solve_level(level: LevelDefinition, max_depth: usize) -> Result<Vec<Direction>> {
-    let engine = GameEngine::new(level);
+    let engine = GameEngine::new(level).context("Invalid grid size in level definition")?;
     let mut queue: VecDeque<(GameEngine, Vec<Direction>)> = VecDeque::new();
     let mut visited: HashSet<StateKey> = HashSet::new();
 
@@ -116,7 +116,10 @@ fn solve_level(level: LevelDefinition, max_depth: usize) -> Result<Vec<Direction
             Direction::West,
         ] {
             let mut next = engine.clone();
-            if !next.process_move(direction) {
+            let Ok(processed) = next.process_move(direction) else {
+                continue;
+            };
+            if !processed {
                 continue;
             }
             let mut next_path = path.clone();

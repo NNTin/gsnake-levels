@@ -39,7 +39,8 @@ pub fn verify_level(level_path: &Path, playback_path: &Path) -> Result<()> {
     let directions = load_playback_directions(playback_path)
         .with_context(|| format!("Failed to load playback: {}", playback_path.display()))?;
 
-    let mut engine = GameEngine::new(level);
+    let mut engine = GameEngine::new(level)
+        .with_context(|| format!("Invalid grid size in level file: {}", level_path.display()))?;
     let mut frame = engine.generate_frame();
 
     for direction in directions {
@@ -47,7 +48,9 @@ pub fn verify_level(level_path: &Path, playback_path: &Path) -> Result<()> {
             break;
         }
 
-        engine.process_move(direction);
+        engine
+            .process_move(direction)
+            .with_context(|| format!("Engine move failed for direction {direction:?}"))?;
         frame = engine.generate_frame();
     }
 
