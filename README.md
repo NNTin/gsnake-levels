@@ -96,6 +96,27 @@ target/llvm-cov/lcov.info
 The coverage command enforces a minimum line-coverage gate of `80%` via
 `cargo llvm-cov --fail-under-lines 80`.
 
+## Solver Performance Baseline
+
+Use the repeatable solver benchmark command to profile `solve_level` across repository level fixtures:
+
+```bash
+# From repository root
+cargo run --manifest-path gsnake-levels/Cargo.toml --bin profile_solver -- \
+  --levels-root gsnake-levels/levels \
+  --iterations 10 \
+  --max-depth 500
+```
+
+This command reports:
+- end-to-end wall time
+- mean solve time across all runs
+- per-difficulty cumulative timings
+- top hotspot levels by cumulative solve time
+
+Baseline metrics and rerun instructions are tracked in:
+`docs/solver-performance-baseline.md`
+
 Usage:
 
 ```text
@@ -131,6 +152,8 @@ cargo run -- render levels/easy/level_001.json playbacks/easy/level_001.json
 cargo run -- generate-levels-json --filter easy,medium
 # Solve a level and write a playback JSON
 cargo run --bin solve_level -- levels/easy/level_001.json playbacks/easy/level_001.json 200
+# Benchmark solver performance across all level fixtures
+cargo run --bin profile_solver -- --levels-root levels --iterations 10 --max-depth 500
 ```
 
 **Note:** The `replay` and `render` commands require running in the root repository context where `gsnake-core` is available as a sibling directory, as they use `cargo run` to execute the `gsnake-cli` binary. For standalone usage, install `gsnake-cli` separately and use it directly.
