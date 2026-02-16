@@ -21,8 +21,14 @@ pub fn load_playback_directions(path: &Path) -> Result<Vec<Direction>> {
     }
 
     let mut directions = Vec::with_capacity(raw_steps.len());
-    for step in raw_steps {
-        let direction = parse_key(&step.key)?;
+    for (index, step) in raw_steps.into_iter().enumerate() {
+        let direction = parse_key(&step.key).with_context(|| {
+            format!(
+                "Failed to parse playback step {} in {}",
+                index + 1,
+                path.display()
+            )
+        })?;
         directions.push(direction);
     }
 
@@ -31,7 +37,10 @@ pub fn load_playback_directions(path: &Path) -> Result<Vec<Direction>> {
 
 fn parse_key(key: &str) -> Result<Direction> {
     if key.len() == 1 {
-        let ch = key.chars().next().unwrap();
+        let ch = key
+            .chars()
+            .next()
+            .ok_or_else(|| anyhow::anyhow!("Playback key cannot be empty"))?;
         if matches!(ch, 'R' | 'D' | 'L' | 'U') {
             return parse_string_char(ch);
         }
@@ -220,6 +229,27 @@ mod tests {
         assert!(result.is_err());
 
         let error = result.unwrap_err();
-        assert!(error.to_string().contains("Invalid key"));
+        let message = format!("{error:#}");
+        assert!(message.contains("Invalid key"));
+    }
+
+    #[test]
+    fn test_load_playback_directions_invalid_key_reports_step_context() {
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(
+            file,
+            r#"[
+                {{"key": "X", "delay_ms": 100}}
+            ]"#
+        )
+        .unwrap();
+
+        let result = load_playback_directions(file.path());
+        assert!(result.is_err());
+
+        let error = result.unwrap_err();
+        let message = format!("{error:#}");
+        assert!(message.contains("Failed to parse playback step 1"));
+        assert!(message.contains("Invalid key 'X'"));
     }
 }

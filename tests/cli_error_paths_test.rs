@@ -89,6 +89,31 @@ fn test_verify_command_returns_error_for_malformed_playback_file() {
 }
 
 #[test]
+fn test_verify_command_returns_error_for_invalid_playback_key() {
+    let temp_dir = TempDir::new().unwrap();
+    let level_path = temp_dir.path().join("levels/easy/level.json");
+    let playback_path = temp_dir.path().join("playbacks/easy/level.json");
+    fs::create_dir_all(level_path.parent().unwrap()).unwrap();
+    fs::create_dir_all(playback_path.parent().unwrap()).unwrap();
+    write_test_level(&level_path);
+    fs::write(
+        &playback_path,
+        r#"[
+            {"key":"X","delay_ms":200}
+        ]"#,
+    )
+    .unwrap();
+
+    let output = run_levels_command(temp_dir.path(), &["verify", "levels/easy/level.json"]);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(stderr.contains("Failed to load playback"));
+    assert!(stderr.contains("Failed to parse playback step 1"));
+    assert!(stderr.contains("Invalid key 'X'"));
+}
+
+#[test]
 fn test_verify_all_command_returns_error_for_missing_level_file() {
     let temp_dir = TempDir::new().unwrap();
     let easy_dir = temp_dir.path().join("levels/easy");
