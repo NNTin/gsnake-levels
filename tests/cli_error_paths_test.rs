@@ -24,17 +24,26 @@ fn write_test_level(path: &Path) {
 }
 
 fn write_levels_metadata(levels_toml_path: &Path, file: &str, solved: Option<bool>) {
-    let levels_toml = LevelsToml {
-        level: vec![LevelMeta {
-            id: Some("cli-test-level".to_string()),
-            file: Some(file.to_string()),
-            author: Some("gsnake".to_string()),
-            solved,
-            difficulty: Some("easy".to_string()),
-            tags: Some(vec![]),
-            description: Some("CLI error-path test level".to_string()),
-        }],
-    };
+    write_levels_metadata_entries(
+        levels_toml_path,
+        vec![create_level_meta(Some(file), solved, "easy")],
+    );
+}
+
+fn create_level_meta(file: Option<&str>, solved: Option<bool>, difficulty: &str) -> LevelMeta {
+    LevelMeta {
+        id: Some("cli-test-level".to_string()),
+        file: file.map(ToString::to_string),
+        author: Some("gsnake".to_string()),
+        solved,
+        difficulty: Some(difficulty.to_string()),
+        tags: Some(vec![]),
+        description: Some("CLI error-path test level".to_string()),
+    }
+}
+
+fn write_levels_metadata_entries(levels_toml_path: &Path, entries: Vec<LevelMeta>) {
+    let levels_toml = LevelsToml { level: entries };
     write_levels_toml(levels_toml_path, &levels_toml).unwrap();
 }
 
@@ -91,4 +100,53 @@ fn test_verify_all_command_returns_error_for_missing_level_file() {
 
     assert_eq!(output.status.code(), Some(1));
     assert!(stderr.contains("Level file not found"));
+}
+
+#[test]
+fn test_validate_levels_toml_reports_aggregated_errors() {
+    let temp_dir = TempDir::new().unwrap();
+    let levels_root = temp_dir.path().join("levels");
+    let easy_dir = levels_root.join("easy");
+    let medium_dir = levels_root.join("medium");
+    let hard_dir = levels_root.join("hard");
+    fs::create_dir_all(&easy_dir).unwrap();
+    fs::create_dir_all(&medium_dir).unwrap();
+    fs::create_dir_all(&hard_dir).unwrap();
+
+    fs::write(easy_dir.join("invalid.json"), "{invalid json}").unwrap();
+    write_levels_metadata_entries(
+        &easy_dir.join("levels.toml"),
+        vec![
+            create_level_meta(Some("missing.json"), Some(true), "easy"),
+            create_level_meta(Some("invalid.json"), Some(true), "easy"),
+        ],
+    );
+
+    write_test_level(&medium_dir.join("level-medium.json"));
+    write_levels_metadata_entries(
+        &medium_dir.join("levels.toml"),
+        vec![create_level_meta(
+            Some("level-medium.json"),
+            Some(true),
+            "medium",
+        )],
+    );
+
+    write_test_level(&hard_dir.join("level-hard.json"));
+    write_levels_metadata_entries(
+        &hard_dir.join("levels.toml"),
+        vec![create_level_meta(
+            Some("level-hard.json"),
+            Some(true),
+            "hard",
+        )],
+    );
+
+    let output = run_levels_command(temp_dir.path(), &["validate-levels-toml"]);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert_eq!(output.status.code(), Some(3));
+    assert!(stderr.contains("Validation failed with 2 issue(s):"));
+    assert!(stderr.contains("1. [io] Referenced level JSON file does not exist"));
+    assert!(stderr.contains("2. [parse] Failed to parse level JSON as LevelDefinition"));
 }
