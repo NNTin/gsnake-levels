@@ -105,8 +105,12 @@ fn parse_filter(filter: Option<&str>) -> Result<Vec<&'static str>> {
 fn load_level(level_path: &PathBuf) -> Result<LevelDefinition> {
     let contents = std::fs::read_to_string(level_path)
         .with_context(|| format!("Failed to read level file: {}", level_path.display()))?;
-    let level: LevelDefinition =
-        serde_json::from_str(&contents).with_context(|| "Failed to parse level JSON")?;
+    let level: LevelDefinition = serde_json::from_str(&contents).with_context(|| {
+        format!(
+            "Failed to parse level JSON: {}",
+            level_path.as_path().display()
+        )
+    })?;
     Ok(level)
 }
 
@@ -114,9 +118,17 @@ fn load_level(level_path: &PathBuf) -> Result<LevelDefinition> {
 mod tests {
     use super::*;
     use crate::levels::{LevelMeta, LevelsToml};
+    use anyhow::anyhow;
     use std::fs;
     use std::path::Path;
+    use std::sync::MutexGuard;
     use tempfile::TempDir;
+
+    fn lock_cwd_mutex() -> Result<MutexGuard<'static, ()>> {
+        crate::test_cwd::cwd_mutex()
+            .lock()
+            .map_err(|_| anyhow!("Failed to lock cwd mutex"))
+    }
 
     fn create_test_level_json(levels_dir: &Path, filename: &str, name: &str) -> Result<()> {
         fs::create_dir_all(levels_dir)?;
@@ -185,9 +197,7 @@ mod tests {
 
     #[test]
     fn test_run_generate_levels_json_success_from_package_directory() -> Result<()> {
-        let _lock = crate::test_cwd::cwd_mutex()
-            .lock()
-            .expect("Failed to lock cwd mutex");
+        let _lock = lock_cwd_mutex()?;
 
         let temp_dir = TempDir::new()?;
         let easy_dir = temp_dir.path().join("levels/easy");
@@ -200,9 +210,7 @@ mod tests {
 
     #[test]
     fn test_run_generate_levels_json_success_from_repo_root() -> Result<()> {
-        let _lock = crate::test_cwd::cwd_mutex()
-            .lock()
-            .expect("Failed to lock cwd mutex");
+        let _lock = lock_cwd_mutex()?;
 
         let temp_dir = TempDir::new()?;
         let easy_dir = temp_dir.path().join("gsnake-levels/levels/easy");
@@ -215,9 +223,7 @@ mod tests {
 
     #[test]
     fn test_run_generate_levels_json_missing_level_file_fails() -> Result<()> {
-        let _lock = crate::test_cwd::cwd_mutex()
-            .lock()
-            .expect("Failed to lock cwd mutex");
+        let _lock = lock_cwd_mutex()?;
 
         let temp_dir = TempDir::new()?;
         let easy_dir = temp_dir.path().join("levels/easy");
@@ -235,10 +241,30 @@ mod tests {
     }
 
     #[test]
+    fn test_run_generate_levels_json_invalid_level_json_fails() -> Result<()> {
+        let _lock = lock_cwd_mutex()?;
+
+        let temp_dir = TempDir::new()?;
+        let easy_dir = temp_dir.path().join("levels/easy");
+        fs::create_dir_all(&easy_dir)?;
+        fs::write(easy_dir.join("invalid_level.json"), "{not-valid-json}")?;
+        write_levels_toml(&easy_dir, "easy", "invalid_level.json")?;
+        let _cwd = crate::test_cwd::CwdGuard::set(temp_dir.path());
+
+        let result = run_generate_levels_json(Some("easy"), true, false);
+        assert!(result.is_err());
+        let error = format!(
+            "{:#}",
+            result.expect_err("Expected invalid level JSON parse error")
+        );
+        assert!(error.contains("Failed to parse level JSON"));
+        assert!(error.contains("invalid_level.json"));
+        Ok(())
+    }
+
+    #[test]
     fn test_run_generate_levels_json_with_sync_enabled() -> Result<()> {
-        let _lock = crate::test_cwd::cwd_mutex()
-            .lock()
-            .expect("Failed to lock cwd mutex");
+        let _lock = lock_cwd_mutex()?;
 
         let temp_dir = TempDir::new()?;
         fs::create_dir_all(temp_dir.path().join("levels/easy"))?;
