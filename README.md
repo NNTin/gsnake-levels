@@ -13,9 +13,11 @@ branch = "main"
 package = "gsnake-core"
 ```
 
-### Local Override Detection (Root Repository Mode)
+### Build Mode Selection (`build.rs`)
 
-When building in the root repository, `gsnake-levels` automatically detects the context and uses the local version of `gsnake-core` instead of fetching from git. This is implemented via a `build.rs` script that:
+`gsnake-levels` uses a `build.rs` script to choose between local and standalone dependency modes for `gsnake-core`.
+
+Default behavior is **auto-detect**:
 
 1. **Detects root repo context** by checking:
    - `../.git` exists (indicating root repository)
@@ -27,15 +29,35 @@ When building in the root repository, `gsnake-levels` automatically detects the 
    gsnake-core = { path = "../gsnake-core/engine/core" }
    ```
 
-3. **Automatically switches modes**:
+3. **Auto mode switches**:
    - **Root repo mode**: Uses local path for development (faster builds, no network)
    - **Standalone mode**: Uses git dependency (works anywhere)
+
+You can explicitly override mode with `GSNAKE_LEVELS_BUILD_MODE`:
+
+- `auto` (default): filesystem detection behavior above
+- `local`: always force local `gsnake-core` path override
+- `standalone`: always force git dependency mode and remove local override
+
+Example:
+
+```bash
+GSNAKE_LEVELS_BUILD_MODE=local cargo build
+GSNAKE_LEVELS_BUILD_MODE=standalone cargo build
+GSNAKE_LEVELS_BUILD_MODE=auto cargo build
+```
+
+Mode precedence is:
+1. `GSNAKE_LEVELS_BUILD_MODE` override (if set to `auto`, `local`, or `standalone`)
+2. Filesystem detection (when override is unset or `auto`)
 
 You can verify which mode is active by checking the build output:
 ```bash
 cargo clean && cargo build
 # Root repo: "warning: Root repository detected - using local gsnake-core"
 # Standalone: "warning: Standalone mode - using git dependency"
+# Override local: "warning: Build mode override: local ..."
+# Override standalone: "warning: Build mode override: standalone ..."
 ```
 
 The override happens transparently - no manual configuration needed!
