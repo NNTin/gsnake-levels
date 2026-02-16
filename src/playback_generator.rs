@@ -1,9 +1,8 @@
-use crate::levels;
+use crate::{levels, solver::solve_level_to_playback};
 use anyhow::{Context, Result};
 use std::{
     fs,
     path::{Path, PathBuf},
-    process::Command,
 };
 
 /// Result of playback generation for a single level
@@ -30,32 +29,10 @@ pub fn generate_playback_for_level(
         .ok_or_else(|| anyhow::anyhow!("Invalid level filename"))?
         .to_string();
 
-    // Ensure playback directory exists
-    if let Some(parent) = playback_path.parent() {
-        fs::create_dir_all(parent)
-            .with_context(|| format!("Failed to create directory: {}", parent.display()))?;
-    }
-
-    // Run solve_level binary
-    let output = Command::new("cargo")
-        .arg("run")
-        .arg("--bin")
-        .arg("solve_level")
-        .arg("--")
-        .arg(level_path)
-        .arg(playback_path)
-        .arg("--max-depth")
-        .arg(max_depth.to_string())
-        .output()
-        .context("Failed to execute solve_level binary")?;
-
-    let solved = output.status.success();
-
-    let error = if !solved {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        Some(stderr.trim().to_string())
-    } else {
-        None
+    let playback_result = solve_level_to_playback(level_path, playback_path, max_depth);
+    let (solved, error) = match playback_result {
+        Ok(_) => (true, None),
+        Err(err) => (false, Some(format!("{err:#}"))),
     };
 
     Ok(PlaybackResult {
@@ -75,6 +52,7 @@ pub fn generate_playbacks_for_difficulty(
     max_depth: usize,
 ) -> Result<Vec<PlaybackResult>> {
     let mut results = Vec::new();
+    let mut level_paths = Vec::new();
 
     // Scan for JSON files
     let entries = fs::read_dir(levels_dir)
@@ -85,28 +63,34 @@ pub fn generate_playbacks_for_difficulty(
         let path = entry.path();
 
         if path.extension().and_then(|s| s.to_str()) == Some("json") {
-            let filename = path
-                .file_name()
-                .and_then(|s| s.to_str())
-                .ok_or_else(|| anyhow::anyhow!("Invalid filename"))?;
+            level_paths.push(path);
+        }
+    }
 
-            let playback_path = playbacks_dir.join(filename);
+    level_paths.sort();
 
-            match generate_playback_for_level(&path, &playback_path, max_depth) {
-                Ok(result) => {
-                    if !result.solved {
-                        eprintln!(
-                            "Warning: Failed to solve level {} - {}",
-                            result.level_id,
-                            result.error.as_deref().unwrap_or("unknown error")
-                        );
-                    }
-                    results.push(result);
-                },
-                Err(e) => {
-                    eprintln!("Error processing level {}: {}", filename, e);
-                },
-            }
+    for path in level_paths {
+        let filename = path
+            .file_name()
+            .and_then(|s| s.to_str())
+            .ok_or_else(|| anyhow::anyhow!("Invalid filename"))?;
+
+        let playback_path = playbacks_dir.join(filename);
+
+        match generate_playback_for_level(&path, &playback_path, max_depth) {
+            Ok(result) => {
+                if !result.solved {
+                    eprintln!(
+                        "Warning: Failed to solve level {} - {}",
+                        result.level_id,
+                        result.error.as_deref().unwrap_or("unknown error")
+                    );
+                }
+                results.push(result);
+            },
+            Err(e) => {
+                eprintln!("Error processing level {}: {}", filename, e);
+            },
         }
     }
 
@@ -170,8 +154,56 @@ pub fn update_solved_status_from_results(results: &[PlaybackResult]) -> Result<(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::Value;
     use std::fs;
+    use std::path::PathBuf;
     use tempfile::TempDir;
+
+    fn first_easy_level_fixture() -> PathBuf {
+        let mut fixtures: Vec<PathBuf> = fs::read_dir("levels/easy")
+            .unwrap()
+            .filter_map(|entry| {
+                let path = entry.ok()?.path();
+                (path.extension().and_then(|ext| ext.to_str()) == Some("json")).then_some(path)
+            })
+            .collect();
+        fixtures.sort();
+        fixtures.into_iter().next().expect("Expected easy fixture")
+    }
+
+    #[test]
+    fn test_generate_playback_for_level_writes_compatible_json() {
+        let temp_dir = TempDir::new().unwrap();
+        let level_path = first_easy_level_fixture();
+        let playback_path = temp_dir.path().join("playbacks/level_001.json");
+
+        let result = generate_playback_for_level(&level_path, &playback_path, 50).unwrap();
+        assert!(result.solved);
+        assert!(result.error.is_none());
+        assert!(playback_path.exists());
+
+        let playback_content = fs::read_to_string(&playback_path).unwrap();
+        let steps: Vec<Value> = serde_json::from_str(&playback_content).unwrap();
+        assert!(!steps.is_empty());
+        for step in steps {
+            assert!(step.get("key").and_then(Value::as_str).is_some());
+            assert_eq!(step.get("delay_ms").and_then(Value::as_u64), Some(200));
+        }
+    }
+
+    #[test]
+    fn test_generate_playback_for_level_returns_unsolved_on_parse_error() {
+        let temp_dir = TempDir::new().unwrap();
+        let level_path = temp_dir.path().join("broken_level.json");
+        let playback_path = temp_dir.path().join("playbacks/broken_level.json");
+        fs::write(&level_path, "{not-json}").unwrap();
+
+        let result = generate_playback_for_level(&level_path, &playback_path, 50).unwrap();
+        assert!(!result.solved);
+        let error = result.error.expect("Expected error message");
+        assert!(error.contains("Failed to parse level JSON"));
+        assert!(!playback_path.exists());
+    }
 
     #[test]
     fn test_get_solved_unsolved_lists() {

@@ -1,5 +1,6 @@
 use anyhow::{bail, Context, Result};
 use gsnake_core::{engine::GameEngine, Direction, GameStatus, LevelDefinition, Position};
+use serde::Serialize;
 use std::{
     collections::{HashSet, VecDeque},
     fs,
@@ -83,6 +84,18 @@ pub fn load_level(level_path: &Path) -> Result<LevelDefinition> {
     Ok(level)
 }
 
+pub fn solve_level_to_playback(
+    level_path: &Path,
+    output_path: &Path,
+    max_depth: usize,
+) -> Result<usize> {
+    let level = load_level(level_path)?;
+    let solution = solve_level(level, max_depth)
+        .with_context(|| format!("No solution found within depth {}", max_depth))?;
+    write_playback(output_path, &solution)?;
+    Ok(solution.len())
+}
+
 fn state_key(engine: &GameEngine) -> StateKey {
     let level_state = engine.level_state();
     let game_state = engine.game_state();
@@ -117,5 +130,38 @@ fn status_code(status: GameStatus) -> StatusCode {
         GameStatus::GameOver => StatusCode::GameOver,
         GameStatus::LevelComplete => StatusCode::LevelComplete,
         GameStatus::AllComplete => StatusCode::AllComplete,
+    }
+}
+
+#[derive(Serialize)]
+struct PlaybackStep {
+    key: String,
+    delay_ms: u64,
+}
+
+fn write_playback(output_path: &Path, solution: &[Direction]) -> Result<()> {
+    let steps: Vec<PlaybackStep> = solution
+        .iter()
+        .copied()
+        .map(|direction| PlaybackStep {
+            key: direction_name(direction).to_string(),
+            delay_ms: 200,
+        })
+        .collect();
+
+    if let Some(parent) = output_path.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("Failed to create {}", parent.display()))?;
+    }
+    fs::write(output_path, serde_json::to_string_pretty(&steps)? + "\n")
+        .with_context(|| format!("Failed to write {}", output_path.display()))
+}
+
+fn direction_name(direction: Direction) -> &'static str {
+    match direction {
+        Direction::North => "Up",
+        Direction::South => "Down",
+        Direction::East => "Right",
+        Direction::West => "Left",
     }
 }

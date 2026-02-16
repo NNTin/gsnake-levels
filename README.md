@@ -117,6 +117,14 @@ This command reports:
 Baseline metrics and rerun instructions are tracked in:
 `docs/solver-performance-baseline.md`
 
+## Playback Generation Throughput Baseline
+
+US-008 removes per-level `cargo run --bin solve_level` spawning from metadata
+sync playback generation and uses in-process solver calls instead.
+
+Baseline command, before/after metrics, and rerun guidance are tracked in:
+`docs/playback-generation-performance-baseline.md`
+
 Usage:
 
 ```text

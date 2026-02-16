@@ -10,6 +10,7 @@ mod name_generator;
 mod playback;
 mod playback_generator;
 mod render;
+mod solver;
 mod sync_metadata;
 #[cfg(test)]
 mod test_cwd;
