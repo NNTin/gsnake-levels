@@ -153,7 +153,7 @@ mod tests {
             stones,
             spikes,
             exit_is_solid: Some(true),
-            total_food: 0,
+            total_food: Some(0),
         }
     }
 
