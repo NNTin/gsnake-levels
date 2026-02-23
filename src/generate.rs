@@ -105,13 +105,28 @@ fn parse_filter(filter: Option<&str>) -> Result<Vec<&'static str>> {
 fn load_level(level_path: &PathBuf) -> Result<LevelDefinition> {
     let contents = std::fs::read_to_string(level_path)
         .with_context(|| format!("Failed to read level file: {}", level_path.display()))?;
-    let level: LevelDefinition = serde_json::from_str(&contents).with_context(|| {
+    let mut level: LevelDefinition = serde_json::from_str(&contents).with_context(|| {
         format!(
             "Failed to parse level JSON: {}",
             level_path.as_path().display()
         )
     })?;
+
+    ensure_total_food(&mut level);
+
     Ok(level)
+}
+
+fn ensure_total_food(level: &mut LevelDefinition) {
+    if level.total_food.is_none() {
+        level.total_food = Some(derive_total_food(level));
+    }
+}
+
+fn derive_total_food(level: &LevelDefinition) -> u32 {
+    let total = level.food.len() + level.floating_food.len() + level.falling_food.len();
+    // Level arrays cannot practically exceed u32::MAX in real-world usage.
+    total as u32
 }
 
 #[cfg(test)]
@@ -119,6 +134,7 @@ mod tests {
     use super::*;
     use crate::levels::{LevelMeta, LevelsToml};
     use anyhow::anyhow;
+    use serde_json::json;
     use std::fs;
     use std::path::Path;
     use std::sync::MutexGuard;
@@ -132,7 +148,7 @@ mod tests {
 
     fn create_test_level_json(levels_dir: &Path, filename: &str, name: &str) -> Result<()> {
         fs::create_dir_all(levels_dir)?;
-        let level_json = serde_json::json!({
+        let level_json = json!({
             "id": 1,
             "name": name,
             "difficulty": "easy",
@@ -148,9 +164,19 @@ mod tests {
             "spikes": [],
             "totalFood": 1
         });
+        write_test_level_json(levels_dir, filename, &level_json)?;
+        Ok(())
+    }
+
+    fn write_test_level_json(
+        levels_dir: &Path,
+        filename: &str,
+        level_json: &serde_json::Value,
+    ) -> Result<()> {
+        fs::create_dir_all(levels_dir)?;
         fs::write(
             levels_dir.join(filename),
-            serde_json::to_string_pretty(&level_json)?,
+            serde_json::to_string_pretty(level_json)?,
         )?;
         Ok(())
     }
@@ -273,5 +299,58 @@ mod tests {
         let _cwd = crate::test_cwd::CwdGuard::set(temp_dir.path());
 
         run_generate_levels_json(None, true, true)
+    }
+
+    #[test]
+    fn test_load_level_derives_total_food_when_missing() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let level_path = temp_dir.path().join("missing-total-food.json");
+        let level_json = json!({
+            "id": 1,
+            "name": "Derived Total Food",
+            "difficulty": "easy",
+            "gridSize": { "width": 10, "height": 10 },
+            "snake": [{ "x": 0, "y": 0 }],
+            "obstacles": [],
+            "food": [{ "x": 1, "y": 0 }],
+            "exit": { "x": 5, "y": 5 },
+            "snakeDirection": "East",
+            "floatingFood": [{ "x": 2, "y": 0 }],
+            "fallingFood": [{ "x": 3, "y": 0 }, { "x": 4, "y": 0 }],
+            "stones": [],
+            "spikes": []
+        });
+        write_test_level_json(temp_dir.path(), "missing-total-food.json", &level_json)?;
+
+        let loaded = load_level(&level_path)?;
+        assert_eq!(loaded.total_food, Some(4));
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_level_preserves_explicit_total_food() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let level_path = temp_dir.path().join("explicit-total-food.json");
+        let level_json = json!({
+            "id": 1,
+            "name": "Explicit Total Food",
+            "difficulty": "easy",
+            "gridSize": { "width": 10, "height": 10 },
+            "snake": [{ "x": 0, "y": 0 }],
+            "obstacles": [],
+            "food": [{ "x": 1, "y": 0 }],
+            "exit": { "x": 5, "y": 5 },
+            "snakeDirection": "East",
+            "floatingFood": [{ "x": 2, "y": 0 }],
+            "fallingFood": [{ "x": 3, "y": 0 }, { "x": 4, "y": 0 }],
+            "stones": [],
+            "spikes": [],
+            "totalFood": 9
+        });
+        write_test_level_json(temp_dir.path(), "explicit-total-food.json", &level_json)?;
+
+        let loaded = load_level(&level_path)?;
+        assert_eq!(loaded.total_food, Some(9));
+        Ok(())
     }
 }
