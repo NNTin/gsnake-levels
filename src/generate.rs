@@ -3,6 +3,7 @@ use crate::sync_metadata;
 use anyhow::{bail, Context, Result};
 use gsnake_core::LevelDefinition;
 use std::collections::HashSet;
+use std::path::Path;
 use std::path::PathBuf;
 
 pub fn run_generate_levels_json(filter: Option<&str>, dry_run: bool, sync: bool) -> Result<()> {
@@ -102,31 +103,80 @@ fn parse_filter(filter: Option<&str>) -> Result<Vec<&'static str>> {
     Ok(levels::DEFAULT_DIFFICULTIES.to_vec())
 }
 
-fn load_level(level_path: &PathBuf) -> Result<LevelDefinition> {
+fn load_level(level_path: &Path) -> Result<LevelDefinition> {
     let contents = std::fs::read_to_string(level_path)
         .with_context(|| format!("Failed to read level file: {}", level_path.display()))?;
-    let mut level: LevelDefinition = serde_json::from_str(&contents).with_context(|| {
-        format!(
-            "Failed to parse level JSON: {}",
-            level_path.as_path().display()
-        )
-    })?;
+    let mut level: LevelDefinition = serde_json::from_str(&contents)
+        .with_context(|| format!("Failed to parse level JSON: {}", level_path.display()))?;
 
-    ensure_total_food(&mut level);
+    if let Some(derived_total_food) = ensure_total_food(&mut level) {
+        migrate_missing_total_food(level_path, derived_total_food)?;
+    }
 
     Ok(level)
 }
 
-fn ensure_total_food(level: &mut LevelDefinition) {
+fn ensure_total_food(level: &mut LevelDefinition) -> Option<u32> {
     if level.total_food.is_none() {
-        level.total_food = Some(derive_total_food(level));
+        let derived_total_food = derive_total_food(level);
+        level.total_food = Some(derived_total_food);
+        return Some(derived_total_food);
     }
+
+    None
 }
 
 fn derive_total_food(level: &LevelDefinition) -> u32 {
     let total = level.food.len() + level.floating_food.len() + level.falling_food.len();
     // Level arrays cannot practically exceed u32::MAX in real-world usage.
     total as u32
+}
+
+fn migrate_missing_total_food(level_path: &Path, total_food: u32) -> Result<()> {
+    let contents = std::fs::read_to_string(level_path).with_context(|| {
+        format!(
+            "Failed to read level file for totalFood migration: {}",
+            level_path.display()
+        )
+    })?;
+
+    let mut level_json: serde_json::Value = serde_json::from_str(&contents).with_context(|| {
+        format!(
+            "Failed to parse level JSON for totalFood migration: {}",
+            level_path.display()
+        )
+    })?;
+
+    let Some(level_object) = level_json.as_object_mut() else {
+        bail!(
+            "Level JSON is not an object and cannot be migrated: {}",
+            level_path.display()
+        );
+    };
+
+    if level_object.contains_key("totalFood") {
+        return Ok(());
+    }
+
+    level_object.insert(
+        "totalFood".to_string(),
+        serde_json::Value::Number(serde_json::Number::from(total_food)),
+    );
+    let migrated = serde_json::to_string_pretty(&level_json).with_context(|| {
+        format!(
+            "Failed to serialize migrated level JSON with totalFood: {}",
+            level_path.display()
+        )
+    })?;
+
+    std::fs::write(level_path, format!("{migrated}\n")).with_context(|| {
+        format!(
+            "Failed to write migrated level JSON with totalFood: {}",
+            level_path.display()
+        )
+    })?;
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -324,6 +374,10 @@ mod tests {
 
         let loaded = load_level(&level_path)?;
         assert_eq!(loaded.total_food, Some(4));
+
+        let migrated_contents = fs::read_to_string(&level_path)?;
+        let migrated_level: serde_json::Value = serde_json::from_str(&migrated_contents)?;
+        assert_eq!(migrated_level["totalFood"], 4);
         Ok(())
     }
 
@@ -348,9 +402,12 @@ mod tests {
             "totalFood": 9
         });
         write_test_level_json(temp_dir.path(), "explicit-total-food.json", &level_json)?;
+        let before = fs::read_to_string(&level_path)?;
 
         let loaded = load_level(&level_path)?;
         assert_eq!(loaded.total_food, Some(9));
+        let after = fs::read_to_string(&level_path)?;
+        assert_eq!(before, after);
         Ok(())
     }
 }
