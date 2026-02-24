@@ -159,6 +159,7 @@ dependencies = [
 [[package]]
 name = "gsnake-core"
 version = "0.1.0"
+source = "git+https://github.com/nntin/gsnake?branch=main#1b5c6c93c8bdf57c0bca717cf0019803eff69aaf"
 dependencies = [
  "serde",
  "serde_json",
